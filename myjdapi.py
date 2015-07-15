@@ -37,14 +37,7 @@ class myjdapi:
     def __updateEncryptionTokens(self):
         h = hashlib.sha256()
 
-        h.update(self.loginSecret+self.sessiontoken.encode('utf-8'))
-        self.serverEncryptionToken=h.digest()
-        h = hashlib.sha256()
-        h.update(self.deviceSecret+self.sessiontoken.encode('utf-8'))
-        self.deviceEncryptionToken=h.digest()
-    def updateEncryptionTokens(self):
-        h = hashlib.sha256()
-        h.update(self.loginSecret+bytes(self.sessiontoken,'utf-8'))
+        h.update(self.loginSecret+bytearray.fromhex(self.sessiontoken))
         self.serverEncryptionToken=h.digest()
         h = hashlib.sha256()
         h.update(self.deviceSecret+self.sessiontoken.encode('utf-8'))
@@ -87,10 +80,9 @@ class myjdapi:
         url=self.api_url+get
         print(url)
         response=requests.get(url)
-        print(response.text,response.status_code)
         if response.status_code != 200:
             return False
-        text=self.__decrypt(self.loginSecret,response.text)
+        text=self.__decrypt(self.serverEncryptionToken,response.text)
         jsondata=json.loads(text.decode('utf-8'))
         print(jsondata)
         if jsondata['rid']!=self.rid_counter:
@@ -98,6 +90,7 @@ class myjdapi:
         self.rid_counter+=1
         self.sessiontoken=jsondata["sessiontoken"]
         self.regaintoken=jsondata["regaintoken"]
+        self.__updateEncryptionTokens()
         
     def disconnect(email,password):
         # Disconnects from the api
