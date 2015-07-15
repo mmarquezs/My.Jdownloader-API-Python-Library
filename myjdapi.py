@@ -7,7 +7,7 @@ import urllib
 import base64
 from Crypto.Cipher import AES
 
-unpad = lambda s : s[0:-ord(s[-1])]
+unpad = lambda s : s[0:-s[-1]]
 
 class myjdapi:
 
@@ -39,12 +39,8 @@ class myjdapi:
         signature=h.hexdigest()
         return signature
     def __decrypt(self,secretServer,data):
-        print ("secretServer: ",str(secretServer))
-        iv=secretServer[:int(len(secretServer)/2)]
-        print("IV: "+str(iv))
-        
-        key=secretServer[int(len(secretServer)/2):]
-        print("Key: "+str(key))
+        iv=secretServer[:len(secretServer)//2]        
+        key=secretServer[len(secretServer)//2:]
         decryptor = AES.new(key,AES.MODE_CBC,iv)
         decrypted_data = unpad(decryptor.decrypt(base64.b64decode(data)))
         return decrypted_data
@@ -57,20 +53,13 @@ class myjdapi:
         get+="&signature="+str(self.__signaturecreate(self.loginSecret,get))
         url=self.api_url+get
         response=requests.get(url)
-        print(response.status_code)
-        print(url)
-        print(response.text)
         if response.status_code != 200:
             return False
-        print(str(response.text))
         text=self.__decrypt(self.loginSecret,response.text)
-        print(str(text))
-        jsondata=json.loads(text)
+        jsondata=json.loads(text.decode('utf-8'))
         if jsondata['rid']!=self.rid_counter:
             return False
-        print(url)
-        print(text)
-        
+        print(jsondata)
             
     def reconnect(email,password):
         # Restablish connection to api
