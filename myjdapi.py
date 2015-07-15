@@ -13,7 +13,7 @@ unpad = lambda s : s[0:-s[-1]]
 class myjdapi:
 
     def __init__(self,email=None,password=None):
-        self.rid_counter=int(time.time())
+        self.rid=int(time.time())
         self.api_url = "http://api.jdownloader.org"
         self.appkey = "http://git.io/vmcsk"
         self.apiVer = 1
@@ -35,9 +35,12 @@ class myjdapi:
         secret=h.digest()
         return secret
     def __updateEncryptionTokens(self):
+        if self.serverEncryptionToken=='':
+            oldtoken=self.loginSecret
+        else:
+            oldtoken=self.serverEncryptionToken            
         h = hashlib.sha256()
-
-        h.update(self.loginSecret+bytearray.fromhex(self.sessiontoken))
+        h.update(oldtoken+bytearray.fromhex(self.sessiontoken))
         self.serverEncryptionToken=h.digest()
         h = hashlib.sha256()
         h.update(self.deviceSecret+self.sessiontoken.encode('utf-8'))
@@ -53,11 +56,13 @@ class myjdapi:
         decryptor = AES.new(key,AES.MODE_CBC,iv)
         decrypted_data = unpad(decryptor.decrypt(base64.b64decode(data)))
         return decrypted_data
+    def __updateRid(self):
+        self.rid=int(time.time())
     def connect(self,email,password):
         # Establish connection to api
         self.loginSecret=self.__secretcreate(email,password,"server")
         self.deviceSecret=self.__secretcreate(email,password,"device")
-        get="/my/connect?email="+urllib.parse.quote(email)+"&appkey="+urllib.parse.quote(self.appkey)+"&rid="+str(self.rid_counter)
+        get="/my/connect?email="+urllib.parse.quote(email)+"&appkey="+urllib.parse.quote(self.appkey)+"&rid="+str(self.rid)
         get+="&signature="+str(self.__signaturecreate(self.loginSecret,get))
         url=self.api_url+get
         response=requests.get(url)
@@ -65,17 +70,17 @@ class myjdapi:
             return False
         text=self.__decrypt(self.loginSecret,response.text)
         jsondata=json.loads(text.decode('utf-8'))
-        if jsondata['rid']!=self.rid_counter:
+        if jsondata['rid']!=self.rid:
             return False
         print(jsondata)
-        self.rid_counter+=1
+        self.__updateRid()
         self.sessiontoken=jsondata["sessiontoken"]
         self.regaintoken=jsondata["regaintoken"]
         self.__updateEncryptionTokens()
         
     def reconnect(self):
         # Restablish connection to api
-        get="/my/reconnect?appkey="+urllib.parse.quote(self.appkey)+"&sessiontoken="+self.sessiontoken+"&regaintoken="+self.regaintoken+"&rid="+str(self.rid_counter)
+        get="/my/reconnect?appkey="+urllib.parse.quote(self.appkey)+"&sessiontoken="+self.sessiontoken+"&regaintoken="+self.regaintoken+"&rid="+str(self.rid)
         get+="&signature="+str(self.__signaturecreate(self.serverEncryptionToken,get))
         url=self.api_url+get
         print(url)
@@ -85,9 +90,9 @@ class myjdapi:
         text=self.__decrypt(self.serverEncryptionToken,response.text)
         jsondata=json.loads(text.decode('utf-8'))
         print(jsondata)
-        if jsondata['rid']!=self.rid_counter:
+        if jsondata['rid']!=self.rid:
             return False
-        self.rid_counter+=1
+        self.__updateRid()
         self.sessiontoken=jsondata["sessiontoken"]
         self.regaintoken=jsondata["regaintoken"]
         self.__updateEncryptionTokens()
