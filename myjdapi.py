@@ -1,20 +1,22 @@
 import hashlib
+import hmac
+import urllib
 
 class jdapi:
-    api_url = "http://api.jdownloader.org"
-    rid_counter = 0
-    appkey = "myjdapi-python"
-    apiVer = 1
-    devices = []
-    loginSecret = ""
-    deviceSecret = ""
-    sessiontoken = ""
-    regaintoken = ""
-    serverEncryptionToken = ""
-    deviceEncryptionToken = ""
 
     def __init__(self,email=None,password=None):
         self.rid_counter=int(time.time())
+        self.api_url = "http://api.jdownloader.org"
+        self.appkey = "myjdapi-python"
+        self.apiVer = 1
+        self.devices = []
+        self.loginSecret = ""
+        self.deviceSecret = ""
+        self.sessiontoken = ""
+        self.regaintoken = ""
+        self.serverEncryptionToken = ""
+        self.deviceEncryptionToken = ""
+
         if email!=None & password!=None:
             self.connect(email,password)
     def __secretcreate(email,password,domain):
@@ -27,6 +29,11 @@ class jdapi:
         
     def connect(email,password):
         # Establish connection to api
+        self.loginSecret=self.__secretcreate(email,password,"server")
+        self.deviceSecret=self.__secretcreate(email,password,"device")
+        signature=
+        get="/my/connect?email="+urllib.quote(email)+"&appkey="+urllib.quote(self.appkey)+"&rid="+self.rid_counter+
+        
         pass
     def reconnect(email,password):
         # Restablish connection to api
