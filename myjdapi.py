@@ -40,6 +40,13 @@ class myjdapi:
             self.connect(email,password)
             # Make an exception or something if it fails? Or simply ignore the error?
     def __secretcreate(self,email,password,domain):
+        """ 
+        Calculates the loginSecret and deviceSecret
+        :param email: My.Jdownloader User email
+        :param password: My.Jdownloader User password
+        :param domain: The domain , if is for Server (loginSecret) or Device (deviceSecret).  
+        :return: secret hash
+        """
         # Calculate the loginSecret and deviceSecret
         # email,password, domain (server,device)
         h = hashlib.sha256()
@@ -47,6 +54,10 @@ class myjdapi:
         secret=h.digest()
         return secret
     def __updateEncryptionTokens(self):
+        """ 
+        Updates the serverEncryptionToken and deviceEncryptionToken
+
+        """
         if self.serverEncryptionToken=='':
             oldtoken=self.loginSecret
         else:
