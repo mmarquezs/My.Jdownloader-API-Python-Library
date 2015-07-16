@@ -38,7 +38,8 @@ class myjdapi:
 
         if email!=None and password!=None:
             self.connect(email,password)
-            # Make an exception or something if it fails? Or simply ignore the error?    def __secretcreate(self,email,password,domain):
+            # Make an exception or something if it fails? Or simply ignore the error?
+    def __secretcreate(self,email,password,domain):
         # Calculate the loginSecret and deviceSecret
         # email,password, domain (server,device)
         h = hashlib.sha256()
