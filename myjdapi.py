@@ -51,10 +51,10 @@ class myjdapi:
         self.appkey = "http://git.io/vmcsk"
         self.apiVer = 1
         self.__devices = []
-        self.loginSecret = ""
-        self.deviceSecret = ""
-        self.sessiontoken = ""
-        self.regaintoken = ""
+        self.loginSecret = False
+        self.deviceSecret = False
+        self.sessiontoken = False
+        self.regaintoken = False
         self.serverEncryptionToken = False
         self.deviceEncryptionToken = False
 
@@ -130,20 +130,11 @@ class myjdapi:
         self.loginSecret=self.__secretcreate(email,password,"server")
         self.deviceSecret=self.__secretcreate(email,password,"device")
         text=self.call("/my/connect","GET",rid=True,params=[("email",email),("appkey",self.appkey)])
-        print(text)
-        # get="/my/connect?email="+urllib.parse.quote(email)+"&appkey="+urllib.parse.quote(self.appkey)+"&rid="+str(self.rid)
-        # get+="&signature="+str(self.__signaturecreate(self.loginSecret,get))
-        # url=self.api_url+get
-        # response=requests.get(url)
-        # if response.status_code != 200:
-        #     return False
-        # text=self.__decrypt(self.loginSecret,response.text)
-        jsondata=json.loads(text.decode('utf-8'))
-        if jsondata['rid']!=self.rid:
+        if not text:
             return False
         self.__updateRid()
-        self.sessiontoken=jsondata["sessiontoken"]
-        self.regaintoken=jsondata["regaintoken"]
+        self.sessiontoken=text["sessiontoken"]
+        self.regaintoken=text["regaintoken"]
         self.__updateEncryptionTokens()
         return True
     def reconnect(self):
@@ -153,21 +144,14 @@ class myjdapi:
         :returns: boolean -- True if succesful, False if there was any error.
 
         """
-        get="/my/reconnect?sessiontoken="+self.sessiontoken+"&regaintoken="+self.regaintoken+"&rid="+str(self.rid)
-        get+="&signature="+str(self.__signaturecreate(self.serverEncryptionToken,get))
-        url=self.api_url+get
-
-        response=requests.get(url)
-        if response.status_code != 200:
+        if not self.sessiontoken:
             return False
-        text=self.__decrypt(self.serverEncryptionToken,response.text)
-        jsondata=json.loads(text.decode('utf-8'))
-
-        if jsondata['rid']!=self.rid:
+        text=self.call("/my/reconnect","GET",rid=True,params=[("sessiontoken",self.sessiontoken),("regaintoken",self.regaintoken)])
+        if not text:
             return False
         self.__updateRid()
-        self.sessiontoken=jsondata["sessiontoken"]
-        self.regaintoken=jsondata["regaintoken"]
+        self.sessiontoken=text["sessiontoken"]
+        self.regaintoken=text["regaintoken"]
         self.__updateEncryptionTokens()
         return True
     def disconnect(self):
@@ -177,19 +161,18 @@ class myjdapi:
         :returns: boolean -- True if succesful, False if there was any error.
 
         """
-        get="/my/disconnect?sessiontoken="+self.sessiontoken+"&rid="+str(self.rid)
-        get+="&signature="+str(self.__signaturecreate(self.serverEncryptionToken,get))
-        url=self.api_url+get
-
-        response=requests.get(url)
-        if response.status_code != 200:
+        if not self.sessiontoken:
             return False
-        text=self.__decrypt(self.serverEncryptionToken,response.text)
-        jsondata=json.loads(text.decode('utf-8'))
-
-        if jsondata['rid']!=self.rid:
+        text=self.call("/my/disconnect","GET",rid=True,params=[("sessiontoken",self.sessiontoken)])
+        if not text:
             return False
         self.__updateRid()
+        self.loginSecret = ""
+        self.deviceSecret = ""
+        self.sessiontoken = ""
+        self.regaintoken = ""
+        self.serverEncryptionToken = False
+        self.deviceEncryptionToken = False
         return True
 
     def getDevices(self):
@@ -199,19 +182,13 @@ class myjdapi:
         :returns: boolean -- True if succesful, False if there was any error.
 
         """
-        get="/my/listdevices?sessiontoken="+self.sessiontoken+"&rid="+str(self.rid)
-        get+="&signature="+str(self.__signaturecreate(self.serverEncryptionToken,get))
-        url=self.api_url+get
-        response=requests.get(url)
-        if response.status_code != 200:
+        if not self.sessiontoken:
             return False
-        text=self.__decrypt(self.serverEncryptionToken,response.text)
-        jsondata=json.loads(text.decode('utf-8'))
-        print(jsondata)
-        if jsondata['rid']!=self.rid:
+        text=self.call("/my/listdevices","GET",rid=True,params=[("sessiontoken",self.sessiontoken)])
+        if not text:
             return False
         self.__updateRid()
-        self.__devices=jsondata["list"]
+        self.__devices=text["list"]
         return True
     def listDevices(self):
         """
@@ -259,7 +236,7 @@ class myjdapi:
             if not self.serverEncryptionToken:
                 call+="&signature="+str(self.__signaturecreate(self.loginSecret,call))
             else:
-                call+="&signature="+str(self.__signaturecreate(self.serverEncryptionToken,get))
+                call+="&signature="+str(self.__signaturecreate(self.serverEncryptionToken,call))
         url=self.api_url+call
         if (postparams):
             pass
@@ -271,9 +248,13 @@ class myjdapi:
         else:
             pass
         if encryptedresp.status_code != 200:
-            return 200
+            return False
         if not self.serverEncryptionToken:
             response=self.__decrypt(self.loginSecret,encryptedresp.text) 
         else:
             response=self.__decrypt(self.serverEncryptionToken,encryptedresp.text)
-        return response
+        jsondata=json.loads(response.decode('utf-8'))
+        if jsondata['rid']!=self.rid:
+            return False
+        return jsondata
+
