@@ -13,6 +13,17 @@ unpad = lambda s : s[0:-s[-1]]
 class myjdapi:
 
     def __init__(self,email=None,password=None):
+        """ This functions initializates the myjdapi object.
+        If email and password are given it will also connect try 
+        with that account.
+        If it fails to connect it won't provide any error,
+        you can check if it worked by checking if sessiontoken 
+        is not an empty string.
+        
+        :param email: My.Jdownloader User email
+        :param password: My.Jdownloader User password
+        
+        """
         self.rid=int(time.time())
         self.api_url = "http://api.jdownloader.org"
         self.appkey = "http://git.io/vmcsk"
@@ -27,7 +38,7 @@ class myjdapi:
 
         if email!=None and password!=None:
             self.connect(email,password)
-    def __secretcreate(self,email,password,domain):
+            # Make an exception or something if it fails? Or simply ignore the error?    def __secretcreate(self,email,password,domain):
         # Calculate the loginSecret and deviceSecret
         # email,password, domain (server,device)
         h = hashlib.sha256()
@@ -132,7 +143,6 @@ class myjdapi:
             return False
         self.__updateRid()
         self.devices=jsondata["list"]
-        print(self.devices)
         return True
 
 
