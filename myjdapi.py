@@ -47,8 +47,6 @@ class myjdapi:
         :param domain: The domain , if is for Server (loginSecret) or Device (deviceSecret).  
         :return: secret hash
         """
-        # Calculate the loginSecret and deviceSecret
-        # email,password, domain (server,device)
         h = hashlib.sha256()
         h.update(email.lower().encode('utf-8')+password.encode('utf-8')+domain.lower().encode('utf-8'))
         secret=h.digest()
@@ -69,20 +67,37 @@ class myjdapi:
         h.update(self.deviceSecret+self.sessiontoken.encode('utf-8'))
         self.deviceEncryptionToken=h.digest()
     def __signaturecreate(self,key,data):
-        # Calculate the signature
+        """
+        Calculates the signature for the data given a key
+        :param key: 
+        :param data:
+        """
         h = hmac.new(key,data.encode('utf-8'),hashlib.sha256)
         signature=h.hexdigest()
         return signature
     def __decrypt(self,secretServer,data):
+        """
+        Decrypts the data from the server using the provided token
+        :param secretServer: 
+        :param data:
+        """
         iv=secretServer[:len(secretServer)//2]        
         key=secretServer[len(secretServer)//2:]
         decryptor = AES.new(key,AES.MODE_CBC,iv)
         decrypted_data = unpad(decryptor.decrypt(base64.b64decode(data)))
         return decrypted_data
     def __updateRid(self):
+        """
+        Puts a new value to rid
+        """
         self.rid=int(time.time())
     def connect(self,email,password):
-        # Establish connection to api
+        """
+        Establish connection to api
+        :param email: My.Jdownloader User email
+        :param password: My.Jdownloader User password
+        :returns: boolean -- True if succesful, False if there was any error.
+        """
         self.loginSecret=self.__secretcreate(email,password,"server")
         self.deviceSecret=self.__secretcreate(email,password,"device")
         get="/my/connect?email="+urllib.parse.quote(email)+"&appkey="+urllib.parse.quote(self.appkey)+"&rid="+str(self.rid)
@@ -95,14 +110,16 @@ class myjdapi:
         jsondata=json.loads(text.decode('utf-8'))
         if jsondata['rid']!=self.rid:
             return False
-
         self.__updateRid()
         self.sessiontoken=jsondata["sessiontoken"]
         self.regaintoken=jsondata["regaintoken"]
         self.__updateEncryptionTokens()
         return True
     def reconnect(self):
-        # Restablish connection to api
+        """
+        Restablish connection to api
+        :returns: boolean -- True if succesful, False if there was any error.
+        """
         get="/my/reconnect?sessiontoken="+self.sessiontoken+"&regaintoken="+self.regaintoken+"&rid="+str(self.rid)
         get+="&signature="+str(self.__signaturecreate(self.serverEncryptionToken,get))
         url=self.api_url+get
@@ -121,7 +138,10 @@ class myjdapi:
         self.__updateEncryptionTokens()
         return True
     def disconnect(self):
-        # Disconnects from the api
+        """
+        Disconnects from  api
+        :returns: boolean -- True if succesful, False if there was any error.
+        """
         get="/my/disconnect?sessiontoken="+self.sessiontoken+"&rid="+str(self.rid)
         get+="&signature="+str(self.__signaturecreate(self.serverEncryptionToken,get))
         url=self.api_url+get
@@ -136,12 +156,12 @@ class myjdapi:
             return False
         self.__updateRid()
         return True
-        # self.sessiontoken=jsondata["sessiontoken"]
-        # self.regaintoken=jsondata["regaintoken"]
-        # self.__updateEncryptionTokens()
 
     def getDevices(self):
-        # Lists available devices.
+        """
+        Gets available devices. Use listDevices() to get the devices list. 
+        :returns: boolean -- True if succesful, False if there was any error.
+        """
         get="/my/listdevices?sessiontoken="+self.sessiontoken+"&rid="+str(self.rid)
         get+="&signature="+str(self.__signaturecreate(self.serverEncryptionToken,get))
         url=self.api_url+get
@@ -154,7 +174,18 @@ class myjdapi:
         if jsondata['rid']!=self.rid:
             return False
         self.__updateRid()
-        self.devices=jsondata["list"]
+        self.__devices=jsondata["list"]
         return True
-
+    def listDevices(self):
+        """
+        Returns available devices. Use getDevices() to update the devices list. 
+        Each device in the list is a dictionary like this example: ::
+        {
+            'name': 'Device',
+            'id': 'af9d03a21ddb917492dc1af8a6427f11',
+            'type': 'jd'
+        }
+        :returns: list -- list of devices.
+        """
+        return self.__devices
 
