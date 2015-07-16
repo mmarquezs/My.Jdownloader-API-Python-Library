@@ -7,7 +7,8 @@ import urllib
 import binascii
 import base64
 from Crypto.Cipher import AES
-
+BS=16
+pad = lambda s: s + ((BS - len(s) % BS) * chr(BS - len(s) % BS)).encode()
 unpad = lambda s : s[0:-s[-1]]
 
 class jddevice:
@@ -15,16 +16,28 @@ class jddevice:
     Class that represents a JD device and it's functions
     
     """
-    def __init__(self,deviceDict):
+    def __init__(self,jd,deviceDict):
         """ This functions initializates the device instance.
         It uses the provided dictionary to create the device.
 
         :param deviceDict: Device dictionary
         
         """
+        self.name=deviceDict["name"]
+        self.dId=deviceDict["id"]
+        self.dType=deviceDict["jd"]
+        self.jd=jd
+    def addLinks(self,links,packageName,destinationFolder=False,extractPassword=False,autostart=False,priority="DEFAULT",downloadPassword=False):
+        """
+        Add links to the linkgrabber
+        
+        """
         pass
-    def addLinks(self):
+    def queryLinks(bytesTotal=False,comment=False,status=False,enabled=False,maxResults=-1,startAt=0,packageUUIDs="null",host=False,url=False,availability=False,variantIcon=False,variantName=False,variantID=False,variants=False,priority=False):
         pass
+
+    
+    
     
 
 
@@ -113,6 +126,21 @@ class myjdapi:
         decryptor = AES.new(key,AES.MODE_CBC,iv)
         decrypted_data = unpad(decryptor.decrypt(base64.b64decode(data)))
         return decrypted_data
+
+    def __encrypt(self,secretServer,data):
+        """
+        Encrypts the data from the server using the provided token
+
+        :param secretServer: 
+        :param data:
+
+        """
+        iv=secretServer[:len(secretServer)//2]        
+        key=secretServer[len(secretServer)//2:]
+        decryptor = AES.new(key,AES.MODE_CBC,iv)
+        decrypted_data = unpad(decryptor.decrypt(base64.b64decode(data)))
+        return decrypted_data
+    
     def __updateRid(self):
         """
         Adds 1 to rid
@@ -209,17 +237,21 @@ class myjdapi:
 
         """
         return self.__devices
-    def getDevice(self,deviceid):
+    def getDevice(self,deviceid=False,name=False):
         """
         Returns a jddevice instance of the device
         
         :param deviceid:
         
         """
-        
-        for device in self.__devices:
-            if device["id"]==deviceid:
-                return jddevice(device)
+        if deviceid:
+            for device in self.__devices:
+                if device["id"]==deviceid:
+                    return jddevice(self,device)
+        elif name:
+            for device in self.__devices:
+                if device["name"]==name:
+                    return jddevice(self,device)
         return False
 
     def call(self,action,httpaction="GET",rid=True,params=False,postparams=False,device=False):
@@ -230,7 +262,7 @@ class myjdapi:
                     call+="?"+param[0]+"="+urllib.parse.quote(param[1])
                 else:
                     call+="&"+param[0]+"="+urllib.parse.quote(param[1])
-                    # Todo : Add an exception if the param is loginSecret so it doesn't get encoded.
+                    # Todo : Add an exception if the param is loginSecret so it doesn't get url encoded.
             if rid:
                 call+="&rid="+str(self.rid)
             if not self.serverEncryptionToken:
