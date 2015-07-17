@@ -25,20 +25,52 @@ class jddevice:
         """
         self.name=deviceDict["name"]
         self.dId=deviceDict["id"]
-        self.dType=deviceDict["jd"]
+        self.dType=deviceDict["type"]
         self.jd=jd
     def addLinks(self,links,packageName,destinationFolder=False,extractPassword=False,autostart=False,priority="DEFAULT",downloadPassword=False):
         """
         Add links to the linkgrabber
+
+        {
+        "autostart" : false,
+        "links" : null,
+        "packageName" : null,
+        "extractPassword" : null,
+        "priority" : "DEFAULT",
+        "downloadPassword" : null,
+        "destinationFolder" : null
+        }
         
         """
-        pass
-    def queryLinks(bytesTotal=False,comment=False,status=False,enabled=False,maxResults=-1,startAt=0,packageUUIDs="null",host=False,url=False,availability=False,variantIcon=False,variantName=False,variantID=False,variants=False,priority=False):
+        links=",".join(links)
+        params='{'
+        if (links):
+            params+='\\"links\\" : \\"'+links+'\\",'
+        if (packageName):
+            params+='\\"packageName\\" : \\"'+packageName+'\\",'
+        if (extractPassword):
+            params+='\\"extractPassword\\" : \\"'+extractPassword+'\\",'
+        if (priority):
+            params+='\\"priority\\" : \\"'+priority+'\\",'
+        if (downloadPassword):
+            params+='\\"downloadPassword\\" : \\"'+downloadPassword+'\\",'
+        if (destinationFolder):
+            params+='\\"destinationFolder\\" : \\"'+destinationFolder+'\\",'
+        params+='\\"autostart\\" : '+str(autostart).lower()+','
+        params=params[:-1]+"}"
+        actionurl=self.__actionUrl()
+        if not actionurl:
+            return False
+        text=self.jd.call(actionurl,"POST",rid=False,postparams=[params],action="/linkgrabberv2/addLinks")
+        if not text:
+            return False
+    def queryLinks(self,bytesTotal=False,comment=False,status=False,enabled=False,maxResults=-1,startAt=0,packageUUIDs="null",host=False,url=False,availability=False,variantIcon=False,variantName=False,variantID=False,variants=False,priority=False):
         pass
 
-    
-    
-    
+    def __actionUrl(self):
+        if not self.jd.sessiontoken:
+            return False
+        return "/t_"+self.jd.sessiontoken+"_"+self.dId
 
 
 class myjdapi:
@@ -100,7 +132,7 @@ class myjdapi:
         h.update(oldtoken+bytearray.fromhex(self.sessiontoken))
         self.serverEncryptionToken=h.digest()
         h = hashlib.sha256()
-        h.update(self.deviceSecret+self.sessiontoken.encode('utf-8'))
+        h.update(self.deviceSecret+bytearray.fromhex(self.sessiontoken))
         self.deviceEncryptionToken=h.digest()
     def __signaturecreate(self,key,data):
         """
@@ -135,18 +167,19 @@ class myjdapi:
         :param data:
 
         """
+        data=pad(data.encode('utf-8'))
         iv=secretServer[:len(secretServer)//2]        
         key=secretServer[len(secretServer)//2:]
-        decryptor = AES.new(key,AES.MODE_CBC,iv)
-        decrypted_data = unpad(decryptor.decrypt(base64.b64decode(data)))
-        return decrypted_data
+        encryptor = AES.new(key,AES.MODE_CBC,iv)
+        encrypted_data = base64.b64encode(encryptor.encrypt(data))
+        return encrypted_data.decode('utf-8')
     
     def __updateRid(self):
         """
         Adds 1 to rid
         """
-        # self.rid=int(time.time())
-        self.rid=self.rid+1
+        self.rid=int(time.time())
+        #self.rid=self.rid+1
     def connect(self,email,password):
         """Establish connection to api
 
@@ -254,37 +287,76 @@ class myjdapi:
                     return jddevice(self,device)
         return False
 
-    def call(self,action,httpaction="GET",rid=True,params=False,postparams=False,device=False):
-        if (params):
-            call=action
-            for index,param in enumerate(params):
-                if index==0:
-                    call+="?"+param[0]+"="+urllib.parse.quote(param[1])
+    def call(self,url,httpaction="GET",rid=True,params=False,postparams=False,action=False):
+        if not action:
+            if (params):
+                call=url
+                for index,param in enumerate(params):
+                    if index==0:
+                        call+="?"+param[0]+"="+urllib.parse.quote(param[1])
+                    else:
+                        call+="&"+param[0]+"="+urllib.parse.quote(param[1])
+                        # Todo : Add an exception if the param is loginSecret so it doesn't get url encoded.
+                if rid:
+                    call+="&rid="+str(self.rid)
+            
+                if not self.serverEncryptionToken:
+                    call+="&signature="+str(self.__signaturecreate(self.loginSecret,call))
                 else:
-                    call+="&"+param[0]+"="+urllib.parse.quote(param[1])
-                    # Todo : Add an exception if the param is loginSecret so it doesn't get url encoded.
-            if rid:
-                call+="&rid="+str(self.rid)
-            if not self.serverEncryptionToken:
-                call+="&signature="+str(self.__signaturecreate(self.loginSecret,call))
-            else:
-                call+="&signature="+str(self.__signaturecreate(self.serverEncryptionToken,call))
-        url=self.api_url+call
-        if (postparams):
-            pass
+                    call+="&signature="+str(self.__signaturecreate(self.serverEncryptionToken,call))
+            if (postparams):
+                pass
         
+        else:
+            call=url+action
+            if (params):
+                
+                for index,param in enumerate(params):
+                    if index==0:
+                        call+="?"+param[0]+"="+urllib.parse.quote(param[1])
+                    else:
+                        call+="&"+param[0]+"="+urllib.parse.quote(param[1])
+                        # Todo : Add an exception if the param is loginSecret so it doesn't get url encoded.
+                if rid:
+                    call+="&rid="+str(self.rid)
+            
+                if not self.serverEncryptionToken:
+                    call+="&signature="+str(self.__signaturecreate(self.loginSecret,call))
+                else:
+                    call+="&signature="+str(self.__signaturecreate(self.serverEncryptionToken,call))
+            if (postparams):
+                data='{"url":"'+action+'","params":["'
+                print(postparams)
+                for index,param in enumerate(postparams):
+                    if index != len(postparams)-1:
+                        data+=param+'","'
+                    else:
+                        data+=param+'"],'
+            else:
+                data='{"url":"'+action+'",'
+            data+='"rid":'+str(self.rid)+',"apiVer":1}'
+            print(data)
+            encrypteddata=self.__encrypt(self.deviceEncryptionToken,data);
+
+        url=self.api_url+call
         if httpaction=="GET":
             encryptedresp=requests.get(url)
         elif httpaction=="POST":
-            pass
-        else:
-            pass
+            print(encrypteddata)
+            print(url)
+            encryptedresp=requests.post(url,headers={"Content-Type": "application/aesjson-jd; charset=utf-8"},data=encrypteddata)
+
+        print(encryptedresp.status_code)
+        print(encryptedresp.text)
         if encryptedresp.status_code != 200:
             return False
-        if not self.serverEncryptionToken:
-            response=self.__decrypt(self.loginSecret,encryptedresp.text) 
+        if not action:
+            if not self.serverEncryptionToken:
+                response=self.__decrypt(self.loginSecret,encryptedresp.text) 
+            else:
+                response=self.__decrypt(self.serverEncryptionToken,encryptedresp.text)
         else:
-            response=self.__decrypt(self.serverEncryptionToken,encryptedresp.text)
+            response=self.__decrypt(self.deviceEncryptionToken,encryptedresp.text)
         jsondata=json.loads(response.decode('utf-8'))
         if jsondata['rid']!=self.rid:
             return False
