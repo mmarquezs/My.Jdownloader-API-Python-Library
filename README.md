@@ -1,6 +1,21 @@
 # My.Jdownloader-API-Python-Library
 My.Jdownloader API Python Library
 
+This a module for Python 3 to interact with My.Jdownloader. This is in a WIP project.You're free to use it following the MIT license and any collaboration is appreciated.
+
+To use this API you need to use a "APPkey".This APPkey can be anything you want but it's recommended to be something that identifies your project or a URL to it. Right now this module uses "http://git.io/vmcsk" as the APPKey, but this APPKey is intended just for testing and for little projects, it's recommended that you uses your own "APPKey" so if for some reason this APPKey gets blocked you don't get affected.
+
+
+Right now the only things working are:
+  - JD: 
+    - Connect,Disconnect,Reconnect,GetDevices,listDevices
+  - JD.Device:
+    - addLinks
+
+# DOCUMENTATION
+
+http://myjdownloader-api-python-library.readthedocs.org/en/latest/myjdapi.html#module-myjdapi
+
 # LICENSE
 The MIT License (MIT)
 
