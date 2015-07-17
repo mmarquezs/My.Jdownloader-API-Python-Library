@@ -29,7 +29,7 @@ class jddevice:
         self.jd=jd
     def addLinks(self,links,packageName,destinationFolder=False,extractPassword=False,autostart=False,priority="DEFAULT",downloadPassword=False):
         """
-        Add links to the linkgrabber
+        Add links to the linkcollector
 
         {
         "autostart" : false,
@@ -64,8 +64,52 @@ class jddevice:
         text=self.jd.call(actionurl,"POST",rid=False,postparams=[params],action="/linkgrabberv2/addLinks")
         if not text:
             return False
-    def queryLinks(self,bytesTotal=False,comment=False,status=False,enabled=False,maxResults=-1,startAt=0,packageUUIDs="null",host=False,url=False,availability=False,variantIcon=False,variantName=False,variantID=False,variants=False,priority=False):
-        pass
+        print(text)
+        self.jd.updateRid()
+        
+    def queryLinks(self,bytesTotal=False,comment=False,status=False,enabled=False,maxResults=-1,startAt=0,packageUUIDs=False,host=False,url=False,availability=False,variantIcon=False,variantName=False,variantID=False,variants=False,priority=False):
+        """
+        Get the links in the linkcollector
+        
+        """
+        params='{'
+        if (bytesTotal):
+            params+='\\"bytesTotal\\" : \\"'+str(bytesTotal).lower()+'\\",'
+        if (comment):
+            params+='\\"comment\\" : \\"'+str(comment).lower()+'\\",'
+        if (status):
+            params+='\\"status\\" : \\"'+str(extractPassword).lower()+'\\",'
+        if (enabled):
+            params+='\\"enabled\\" : \\"'+str(enabled).lower()+'\\",'
+        params+='\\"maxResults\\" : \\"'+str(maxResults)+'\\",'
+        params+='\\"startAT\\" : \\"'+str(startAt)+'\\",'
+        if (packageUUIDs):
+            params+='\\"packageUUIDs\\" : \\"'+packageUUIDs+'\\",'
+        if (host):
+            params+='\\"host\\" : \\"'+str(host).lower()+'\\",'
+        if (url):
+            params+='\\"url\\" : \\"'+str(url).lower()+'\\",'
+        if (availability):
+            params+='\\"availability\\" : \\"'+str(availability).lower()+'\\",'
+        if (variantIcon):
+            params+='\\"variantIcon\\" : \\"'+str(variantIcon).lower()+'\\",'
+        if (variantName):
+            params+='\\"variantName\\" : \\"'+str(variantName).lower()+'\\",'
+        if (variantID):
+            params+='\\"variantID\\" : \\"'+str(variantID).lower()+'\\",'
+        if (variants):
+            params+='\\"variants\\" : \\"'+str(variants).lower()+'\\",'
+        if (priority):
+            params+='\\"priority\\" : \\"'+str(priority).lower()+'\\",'
+        params=params[:-1]+"}"
+        actionurl=self.__actionUrl()
+        if not actionurl:
+            return False
+        text=self.jd.call(actionurl,"POST",rid=False,postparams=[params],action="/linkgrabberv2/queryLinks")
+        if not text:
+            return False
+        print(text)
+        self.jd.updateRid()
 
     def __actionUrl(self):
         if not self.jd.sessiontoken:
@@ -174,7 +218,7 @@ class myjdapi:
         encrypted_data = base64.b64encode(encryptor.encrypt(data))
         return encrypted_data.decode('utf-8')
     
-    def __updateRid(self):
+    def updateRid(self):
         """
         Adds 1 to rid
         """
@@ -193,7 +237,7 @@ class myjdapi:
         text=self.call("/my/connect","GET",rid=True,params=[("email",email),("appkey",self.appkey)])
         if not text:
             return False
-        self.__updateRid()
+        self.updateRid()
         self.sessiontoken=text["sessiontoken"]
         self.regaintoken=text["regaintoken"]
         self.__updateEncryptionTokens()
@@ -210,7 +254,7 @@ class myjdapi:
         text=self.call("/my/reconnect","GET",rid=True,params=[("sessiontoken",self.sessiontoken),("regaintoken",self.regaintoken)])
         if not text:
             return False
-        self.__updateRid()
+        self.updateRid()
         self.sessiontoken=text["sessiontoken"]
         self.regaintoken=text["regaintoken"]
         self.__updateEncryptionTokens()
@@ -227,7 +271,7 @@ class myjdapi:
         text=self.call("/my/disconnect","GET",rid=True,params=[("sessiontoken",self.sessiontoken)])
         if not text:
             return False
-        self.__updateRid()
+        self.updateRid()
         self.loginSecret = ""
         self.deviceSecret = ""
         self.sessiontoken = ""
@@ -248,7 +292,7 @@ class myjdapi:
         text=self.call("/my/listdevices","GET",rid=True,params=[("sessiontoken",self.sessiontoken)])
         if not text:
             return False
-        self.__updateRid()
+        self.updateRid()
         self.__devices=text["list"]
         return True
     def listDevices(self):
@@ -342,12 +386,7 @@ class myjdapi:
         if httpaction=="GET":
             encryptedresp=requests.get(url)
         elif httpaction=="POST":
-            print(encrypteddata)
-            print(url)
             encryptedresp=requests.post(url,headers={"Content-Type": "application/aesjson-jd; charset=utf-8"},data=encrypteddata)
-
-        print(encryptedresp.status_code)
-        print(encryptedresp.text)
         if encryptedresp.status_code != 200:
             return False
         if not action:
