@@ -11,6 +11,10 @@ Right now the only things working are:
     - Connect,Disconnect,Reconnect,GetDevices,listDevices
   - JD.Device:
     - addLinks
+    - 
+# DOCUMENTATION
+
+http://myjdownloader-api-python-library.readthedocs.org/en/latest/myjdapi.html#module-myjdapi
 
 # LICENSE
 The MIT License (MIT)
