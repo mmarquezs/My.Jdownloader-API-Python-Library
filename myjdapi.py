@@ -27,177 +27,231 @@ class jddevice:
         self.dId=deviceDict["id"]
         self.dType=deviceDict["type"]
         self.jd=jd
-    def addLinks(self,links,packageName,destinationFolder=False,extractPassword=False,autostart=False,priority="DEFAULT",downloadPassword=False):
+    def action(self,action=False,params=False,postparams=False):
         """
-        Add links to the linkcollector
+        Execute any action in the device using the postparams and params.
+        
+        All the info of which params are required and what are they default value, type,etc 
+        can be found in the MY.Jdownloader API Specifications ( https://goo.gl/pkJ9d1 ).
 
-        {
-        "autostart" : false,
-        "links" : null,
-        "packageName" : null,
-        "extractPassword" : null,
-        "priority" : "DEFAULT",
-        "downloadPassword" : null,
-        "destinationFolder" : null
-        }
-        
-        """
-        links=",".join(links)
-        params='{'
-        if (links):
-            params+='\\"links\\" : \\"'+links+'\\",'
-        if (packageName):
-            params+='\\"packageName\\" : \\"'+packageName+'\\",'
-        if (extractPassword):
-            params+='\\"extractPassword\\" : \\"'+extractPassword+'\\",'
-        if (priority):
-            params+='\\"priority\\" : \\"'+priority+'\\",'
-        if (downloadPassword):
-            params+='\\"downloadPassword\\" : \\"'+downloadPassword+'\\",'
-        if (destinationFolder):
-            params+='\\"destinationFolder\\" : \\"'+destinationFolder+'\\",'
-        params+='\\"autostart\\" : '+str(autostart).lower()+','
-        params=params[:-1]+"}"
-        actionurl=self.__actionUrl()
-        if not actionurl:
-            return False
-        text=self.jd.call(actionurl,"POST",rid=False,postparams=[params],action="/linkgrabberv2/addLinks")
-        if not text:
-            return False
-        print(text)
-        self.jd.updateRid()
-        
-    def queryLinksLinkcollector(self,bytesTotal=False,comment=False,status=False,enabled=False,maxResults=-1,startAt=0,packageUUIDs=False,host=False,url=False,availability=False,variantIcon=False,variantName=False,variantID=False,variants=False,priority=False):
-        """
-        Get the links in the linkcollector
-        
-        """
-        params='{'
-        if (bytesTotal):
-            params+='\\"bytesTotal\\" : \\"'+str(bytesTotal).lower()+'\\",'
-        if (comment):
-            params+='\\"comment\\" : \\"'+str(comment).lower()+'\\",'
-        if (status):
-            params+='\\"status\\" : \\"'+str(extractPassword).lower()+'\\",'
-        if (enabled):
-            params+='\\"enabled\\" : \\"'+str(enabled).lower()+'\\",'
-        params+='\\"maxResults\\" : \\"'+str(maxResults)+'\\",'
-        params+='\\"startAT\\" : \\"'+str(startAt)+'\\",'
-        if (packageUUIDs):
-            params+='\\"packageUUIDs\\" : \\"'+packageUUIDs+'\\",'
-        if (host):
-            params+='\\"host\\" : \\"'+str(host).lower()+'\\",'
-        if (url):
-            params+='\\"url\\" : \\"'+str(url).lower()+'\\",'
-        if (availability):
-            params+='\\"availability\\" : \\"'+str(availability).lower()+'\\",'
-        if (variantIcon):
-            params+='\\"variantIcon\\" : \\"'+str(variantIcon).lower()+'\\",'
-        if (variantName):
-            params+='\\"variantName\\" : \\"'+str(variantName).lower()+'\\",'
-        if (variantID):
-            params+='\\"variantID\\" : \\"'+str(variantID).lower()+'\\",'
-        if (variants):
-            params+='\\"variants\\" : \\"'+str(variants).lower()+'\\",'
-        if (priority):
-            params+='\\"priority\\" : \\"'+str(priority).lower()+'\\",'
-        params=params[:-1]+"}"
-        actionurl=self.__actionUrl()
-        if not actionurl:
-            return False
-        text=self.jd.call(actionurl,"POST",rid=False,postparams=[params],action="/linkgrabberv2/queryLinks")
-        if not text:
-            return False
-        print(text)
-        self.jd.updateRid()
 
-    def queryLinksDownloads(self,bytesTotal=False,comment=False,status=False,enabled=False,maxResults=-1,startAt=0,packageUUIDs=False,host=False,url=False,bytesLoaded=False,speed=False,eta=False,finished=False,priority=False,running=False,skipped=False,extractionStatus=False):
-        """
-        Get the links in the downloadlist
-        
-        """
-        params='{'
-        if (bytesTotal):
-            params+='\\"bytesTotal\\" : \\"'+str(bytesTotal).lower()+'\\",'
-        if (comment):
-            params+='\\"comment\\" : \\"'+str(comment).lower()+'\\",'
-        if (status):
-            params+='\\"status\\" : \\"'+str(extractPassword).lower()+'\\",'
-        if (enabled):
-            params+='\\"enabled\\" : \\"'+str(enabled).lower()+'\\",'
-        params+='\\"maxResults\\" : \\"'+str(maxResults)+'\\",'
-        params+='\\"startAT\\" : \\"'+str(startAt)+'\\",'
-        if (packageUUIDs):
-            params+='\\"packageUUIDs\\" : \\"'+packageUUIDs+'\\",'
-        if (host):
-            params+='\\"host\\" : \\"'+str(host).lower()+'\\",'
-        if (url):
-            params+='\\"url\\" : \\"'+str(url).lower()+'\\",'
-        if (bytesLoaded):
-            params+='\\"bytesLoaded\\" : \\"'+str(bytesLoaded).lower()+'\\",'
-        if (speed):
-            params+='\\"speed\\" : \\"'+str(speed).lower()+'\\",'
-        if (eta):
-            params+='\\"eta\\" : \\"'+str(eta).lower()+'\\",'
-        if (finished):
-            params+='\\"finished\\" : \\"'+str(finished).lower()+'\\",'
-        if (priority):
-            params+='\\"priority\\" : \\"'+str(priority).lower()+'\\",'
-        if (running):
-            params+='\\"running\\" : \\"'+str(running).lower()+'\\",'
-        if (skipped):
-            params+='\\"skipped\\" : \\"'+str(skipped).lower()+'\\",'
-        if (extractionStatus):
-            params+='\\"extractionStatus\\" : \\"'+str(extractionStatus).lower()+'\\",'
-        params=params[:-1]+"}"
-        actionurl=self.__actionUrl()
-        if not actionurl:
-            return False
-        text=self.jd.call(actionurl,"POST",rid=False,postparams=[params],action="/downloadsV2/queryLinks")
-        if not text:
-            return False
-        print(text)
-        self.jd.updateRid()
+        :param params: Params in the url, in a list of tuples. Example: /example?param1=ex&param2=ex2 [("param1","ex"),("param2","ex2")]
+        :param postparams: List of Params that are send in the post. 
 
-    def queryPackagesDownloads(self,bytesTotal=False,comment=False,status=False,enabled=False,maxResults=-1,startAt=0,packageUUIDs=False,childCount=False,hosts=False,saveTo=False,availableOfflineCount=False,availableOnlineCount=False,availableTempUnknownCount=False,availableUnknownCount=False):
-        """
-        Get the links in the downloadlist
         
         """
-        params='{'
-        if (bytesTotal):
-            params+='\\"bytesTotal\\" : \\"'+str(bytesTotal).lower()+'\\",'
-        if (comment):
-            params+='\\"comment\\" : \\"'+str(comment).lower()+'\\",'
-        if (status):
-            params+='\\"status\\" : \\"'+str(extractPassword).lower()+'\\",'
-        if (enabled):
-            params+='\\"enabled\\" : \\"'+str(enabled).lower()+'\\",'
-        params+='\\"maxResults\\" : \\"'+str(maxResults)+'\\",'
-        params+='\\"startAT\\" : \\"'+str(startAt)+'\\",'
-        if (packageUUIDs):
-            params+='\\"packageUUIDs\\" : \\"'+packageUUIDs+'\\",'
-        if (hosts):
-            params+='\\"hosts\\" : \\"'+str(hosts).lower()+'\\",'
-        if (saveTo):
-            params+='\\"saveTo\\" : \\"'+str(saveTo).lower()+'\\",'
-        if (availableOfflineCount):
-            params+='\\"availableOfflineCount\\" : \\"'+str(availableOfflineCount).lower()+'\\",'
-        if (availableOnlineCount):
-            params+='\\"availableOnlineCount\\" : \\"'+str(availableOnlineCount).lower()+'\\",'
-        if (availableTempUnknownCount):
-            params+='\\"availableTempUnknownCount\\" : \\"'+str(availableTempUnknownCount).lower()+'\\",'
-        if (availableUnknownCount):
-            params+='\\"availableUnknownCount\\" : \\"'+str(availableUnknownCount).lower()+'\\",'
-        params=params[:-1]+"}"
+        if not action:
+            return False
+        httpaction="POST"
         actionurl=self.__actionUrl()
         if not actionurl:
             return False
-        text=self.jd.call(actionurl,"POST",rid=False,postparams=[params],action="/downloadsV2/queryPackages")
+        if postparams:
+            post=[]
+            for postparam in postparams:
+                if type(postparam)==type({}):
+                    keys=list(postparam.keys())
+                    data="{"
+                    for param in keys:
+                        if type(postparam[param])==bool:
+                            data+='\\"'+param+'\\" : '+str(postparam[param]).lower()+','
+                        elif type(postparam[param])==str:
+                            data+='\\"'+param+'\\" : \\"'+postparam[param]+'\\",'
+                        else:
+                            data+='\\"'+param+'\\" : '+str(postparam[param])+','
+                    data=data[:-1]+"}"
+                else:
+                    data=postparam
+                post+=[data]
+            if not params:
+                text=self.jd.call(actionurl,httpaction,rid=False,postparams=post,action=action)
+            else:
+                print("HEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEYA")
+                text=self.jd.call(actionurl,httpaction,rid=False,params=params,postparams=post,action=action)
+        else:
+            text=self.jd.call(actionurl,httpaction,rid=False,action=True)
         if not text:
             return False
-        print(text)
+        return True
+
+    # self.jd.call(actionurl,"POST",rid=False,postparams=[params],action="/linkgrabberv2/addLinks")
+    
+    def addLinks(self,params=[{"autostart" : False,"links" : "","packageName" : "","extractPassword" : "","priority" : "DEFAULT","downloadPassword" : "","destinationFolder" : ""}]):
+        resp=self.action("/linkgrabberv2/addLinks",postparams=params)
         self.jd.updateRid()
+        return resp
+        
+    # def addLinks(self,links,packageName,destinationFolder=False,extractPassword=False,autostart=False,priority="DEFAULT",downloadPassword=False):
+    #     """
+    #     Add links to the linkcollector
+
+    #     {
+    #     "autostart" : false,
+    #     "links" : null,
+    #     "packageName" : null,
+    #     "extractPassword" : null,
+    #     "priority" : "DEFAULT",
+    #     "downloadPassword" : null,
+    #     "destinationFolder" : null
+    #     }
+        
+    #     """
+    #     links=",".join(links)
+    #     params='{'
+    #     if (links):
+    #         params+='\\"links\\" : \\"'+links+'\\",'
+    #     if (packageName):
+    #         params+='\\"packageName\\" : \\"'+packageName+'\\",'
+    #     if (extractPassword):
+    #         params+='\\"extractPassword\\" : \\"'+extractPassword+'\\",'
+    #     if (priority):
+    #         params+='\\"priority\\" : \\"'+priority+'\\",'
+    #     if (downloadPassword):
+    #         params+='\\"downloadPassword\\" : \\"'+downloadPassword+'\\",'
+    #     if (destinationFolder):
+    #         params+='\\"destinationFolder\\" : \\"'+destinationFolder+'\\",'
+    #     params+='\\"autostart\\" : '+str(autostart).lower()+','
+    #     params=params[:-1]+"}"
+    #     actionurl=self.__actionUrl()
+    #     if not actionurl:
+    #         return False
+    #     text=self.jd.call(actionurl,"POST",rid=False,postparams=[params],action="/linkgrabberv2/addLinks")
+    #     if not text:
+    #         return False
+    #     print(text)
+    #     self.jd.updateRid()
+        
+    # def queryLinksLinkcollector(self,bytesTotal=False,comment=False,status=False,enabled=False,maxResults=-1,startAt=0,packageUUIDs=False,host=False,url=False,availability=False,variantIcon=False,variantName=False,variantID=False,variants=False,priority=False):
+    #     """
+    #     Get the links in the linkcollector
+        
+    #     """
+    #     params='{'
+    #     if (bytesTotal):
+    #         params+='\\"bytesTotal\\" : \\"'+str(bytesTotal).lower()+'\\",'
+    #     if (comment):
+    #         params+='\\"comment\\" : \\"'+str(comment).lower()+'\\",'
+    #     if (status):
+    #         params+='\\"status\\" : \\"'+str(extractPassword).lower()+'\\",'
+    #     if (enabled):
+    #         params+='\\"enabled\\" : \\"'+str(enabled).lower()+'\\",'
+    #     params+='\\"maxResults\\" : \\"'+str(maxResults)+'\\",'
+    #     params+='\\"startAT\\" : \\"'+str(startAt)+'\\",'
+    #     if (packageUUIDs):
+    #         params+='\\"packageUUIDs\\" : \\"'+packageUUIDs+'\\",'
+    #     if (host):
+    #         params+='\\"host\\" : \\"'+str(host).lower()+'\\",'
+    #     if (url):
+    #         params+='\\"url\\" : \\"'+str(url).lower()+'\\",'
+    #     if (availability):
+    #         params+='\\"availability\\" : \\"'+str(availability).lower()+'\\",'
+    #     if (variantIcon):
+    #         params+='\\"variantIcon\\" : \\"'+str(variantIcon).lower()+'\\",'
+    #     if (variantName):
+    #         params+='\\"variantName\\" : \\"'+str(variantName).lower()+'\\",'
+    #     if (variantID):
+    #         params+='\\"variantID\\" : \\"'+str(variantID).lower()+'\\",'
+    #     if (variants):
+    #         params+='\\"variants\\" : \\"'+str(variants).lower()+'\\",'
+    #     if (priority):
+    #         params+='\\"priority\\" : \\"'+str(priority).lower()+'\\",'
+    #     params=params[:-1]+"}"
+    #     actionurl=self.__actionUrl()
+    #     if not actionurl:
+    #         return False
+    #     text=self.jd.call(actionurl,"POST",rid=False,postparams=[params],action="/linkgrabberv2/queryLinks")
+    #     if not text:
+    #         return False
+    #     print(text)
+    #     self.jd.updateRid()
+
+    # def queryLinksDownloads(self,bytesTotal=False,comment=False,status=False,enabled=False,maxResults=-1,startAt=0,packageUUIDs=False,host=False,url=False,bytesLoaded=False,speed=False,eta=False,finished=False,priority=False,running=False,skipped=False,extractionStatus=False):
+    #     """
+    #     Get the links in the downloadlist
+        
+    #     """
+    #     params='{'
+    #     if (bytesTotal):
+    #         params+='\\"bytesTotal\\" : \\"'+str(bytesTotal).lower()+'\\",'
+    #     if (comment):
+    #         params+='\\"comment\\" : \\"'+str(comment).lower()+'\\",'
+    #     if (status):
+    #         params+='\\"status\\" : \\"'+str(extractPassword).lower()+'\\",'
+    #     if (enabled):
+    #         params+='\\"enabled\\" : \\"'+str(enabled).lower()+'\\",'
+    #     params+='\\"maxResults\\" : \\"'+str(maxResults)+'\\",'
+    #     params+='\\"startAT\\" : \\"'+str(startAt)+'\\",'
+    #     if (packageUUIDs):
+    #         params+='\\"packageUUIDs\\" : \\"'+packageUUIDs+'\\",'
+    #     if (host):
+    #         params+='\\"host\\" : \\"'+str(host).lower()+'\\",'
+    #     if (url):
+    #         params+='\\"url\\" : \\"'+str(url).lower()+'\\",'
+    #     if (bytesLoaded):
+    #         params+='\\"bytesLoaded\\" : \\"'+str(bytesLoaded).lower()+'\\",'
+    #     if (speed):
+    #         params+='\\"speed\\" : \\"'+str(speed).lower()+'\\",'
+    #     if (eta):
+    #         params+='\\"eta\\" : \\"'+str(eta).lower()+'\\",'
+    #     if (finished):
+    #         params+='\\"finished\\" : \\"'+str(finished).lower()+'\\",'
+    #     if (priority):
+    #         params+='\\"priority\\" : \\"'+str(priority).lower()+'\\",'
+    #     if (running):
+    #         params+='\\"running\\" : \\"'+str(running).lower()+'\\",'
+    #     if (skipped):
+    #         params+='\\"skipped\\" : \\"'+str(skipped).lower()+'\\",'
+    #     if (extractionStatus):
+    #         params+='\\"extractionStatus\\" : \\"'+str(extractionStatus).lower()+'\\",'
+    #     params=params[:-1]+"}"
+    #     actionurl=self.__actionUrl()
+    #     if not actionurl:
+    #         return False
+    #     text=self.jd.call(actionurl,"POST",rid=False,postparams=[params],action="/downloadsV2/queryLinks")
+    #     if not text:
+    #         return False
+    #     print(text)
+    #     self.jd.updateRid()
+
+    # def queryPackagesDownloads(self,bytesTotal=False,comment=False,status=False,enabled=False,maxResults=-1,startAt=0,packageUUIDs=False,childCount=False,hosts=False,saveTo=False,availableOfflineCount=False,availableOnlineCount=False,availableTempUnknownCount=False,availableUnknownCount=False):
+    #     """
+    #     Get the links in the downloadlist
+        
+    #     """
+    #     params='{'
+    #     if (bytesTotal):
+    #         params+='\\"bytesTotal\\" : \\"'+str(bytesTotal).lower()+'\\",'
+    #     if (comment):
+    #         params+='\\"comment\\" : \\"'+str(comment).lower()+'\\",'
+    #     if (status):
+    #         params+='\\"status\\" : \\"'+str(extractPassword).lower()+'\\",'
+    #     if (enabled):
+    #         params+='\\"enabled\\" : \\"'+str(enabled).lower()+'\\",'
+    #     params+='\\"maxResults\\" : \\"'+str(maxResults)+'\\",'
+    #     params+='\\"startAT\\" : \\"'+str(startAt)+'\\",'
+    #     if (packageUUIDs):
+    #         params+='\\"packageUUIDs\\" : \\"'+packageUUIDs+'\\",'
+    #     if (hosts):
+    #         params+='\\"hosts\\" : \\"'+str(hosts).lower()+'\\",'
+    #     if (saveTo):
+    #         params+='\\"saveTo\\" : \\"'+str(saveTo).lower()+'\\",'
+    #     if (availableOfflineCount):
+    #         params+='\\"availableOfflineCount\\" : \\"'+str(availableOfflineCount).lower()+'\\",'
+    #     if (availableOnlineCount):
+    #         params+='\\"availableOnlineCount\\" : \\"'+str(availableOnlineCount).lower()+'\\",'
+    #     if (availableTempUnknownCount):
+    #         params+='\\"availableTempUnknownCount\\" : \\"'+str(availableTempUnknownCount).lower()+'\\",'
+    #     if (availableUnknownCount):
+    #         params+='\\"availableUnknownCount\\" : \\"'+str(availableUnknownCount).lower()+'\\",'
+    #     params=params[:-1]+"}"
+    #     actionurl=self.__actionUrl()
+    #     if not actionurl:
+    #         return False
+    #     text=self.jd.call(actionurl,"POST",rid=False,postparams=[params],action="/downloadsV2/queryPackages")
+    #     if not text:
+    #         return False
+    #     print(text)
+    #     self.jd.updateRid()
         
     def __actionUrl(self):
         if not self.jd.sessiontoken:
@@ -458,7 +512,6 @@ class myjdapi:
                     call+="&signature="+str(self.__signaturecreate(self.serverEncryptionToken,call))
             if (postparams):
                 data='{"url":"'+action+'","params":["'
-                print(postparams)
                 for index,param in enumerate(postparams):
                     if index != len(postparams)-1:
                         data+=param+'","'
@@ -471,6 +524,7 @@ class myjdapi:
             encrypteddata=self.__encrypt(self.deviceEncryptionToken,data);
 
         url=self.api_url+call
+        print(url)
         if httpaction=="GET":
             encryptedresp=requests.get(url)
         elif httpaction=="POST":
