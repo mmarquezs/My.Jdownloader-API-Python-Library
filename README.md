@@ -10,7 +10,21 @@ Right now the only things working are:
   - JD: 
     - Connect,Disconnect,Reconnect,GetDevices,listDevices
   - JD.Device:
-    - addLinks
+    - action,addLinks
+
+Example of usage:
+```
+import myjdapi
+
+jd=myjdapi.myjdapi()
+jd.connect("example@example.com","password")
+jd.getDevices()
+jd.getDevice(name="Device1").addLinks([{"links" : "https://mega.nz/#!xxxxxxxxxxxxxxxxxxxxxxxxxxxx,http://mediafire.com/download/xxxxxxxxxxxxxxxx/"}])
+
+```
+
+
+
 
 # DOCUMENTATION
 
