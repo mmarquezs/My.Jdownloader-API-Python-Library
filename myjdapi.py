@@ -11,6 +11,67 @@ BS=16
 pad = lambda s: s + ((BS - len(s) % BS) * chr(BS - len(s) % BS)).encode()
 unpad = lambda s : s[0:-s[-1]]
 
+class linkgrabber:
+    """
+    Class that represents the linkgrabber of a Device
+    """
+    def __init__(self,device):
+        self.device=device
+    
+    def addLinks(self,params=[{"autostart" : False,"links" : "","packageName" : "","extractPassword" : "","priority" : "DEFAULT","downloadPassword" : "","destinationFolder" : ""}]):
+        """
+        Add links to the linkcollector
+
+        {
+        "autostart" : false,
+        "links" : null,
+        "packageName" : null,
+        "extractPassword" : null,
+        "priority" : "DEFAULT",
+        "downloadPassword" : null,
+        "destinationFolder" : null
+        }
+        
+        """
+        resp=self.device.action("/linkgrabberv2/addLinks",postparams=params)
+        self.jd.updateRid()
+        return resp
+    
+    def queryLinks(self,params=[{"bytesTotal" : False,"comment" : False,"status" : False,"enabled" : False, "maxResults" : -1,"startAt" : 0,"packageUUIDs" : False,"host" : False,"url" : False,"availability" : False,"variantIcon" : False,"variantName" : False,"variantID" : False,"variants" : False,"priority" : False}]):
+        """
+        Get the links in the linkcollector
+        
+        {
+        "bytesTotal"    : false,
+        "comment"       : false,
+        "status"        : false,
+        "enabled"       : false,
+        "maxResults"    : false,
+        "startAt"       : false,
+        "packageUUIDs"  : false,
+        "hosts"         : false,
+        "url"           : false,
+        "availability"  : false,
+        "variantIcon"   : false,
+        "variantName"   : false,
+        "variantID"     : false,
+        "variants"      : false,
+        "priority"      : false
+        }
+        """
+        resp=self.action("/linkgrabberv2/queryLinks",postparams=params)
+        self.jd.updateRid()
+        return resp
+
+
+ class downloads:
+    """
+    Class that represents the downloads list of a Device
+    """
+    def __init__(self,device):
+        self.device=device
+    
+      
 class jddevice:
     """
     Class that represents a JD device and it's functions
@@ -27,6 +88,8 @@ class jddevice:
         self.dId=deviceDict["id"]
         self.dType=deviceDict["type"]
         self.jd=jd
+        self.linkgrabber=linkgrabber(self)
+        self.downloads=downloads(self)
     def action(self,action=False,params=False,postparams=False):
         """
         Execute any action in the device using the postparams and params.
@@ -66,61 +129,15 @@ class jddevice:
             if not params:
                 text=self.jd.call(actionurl,httpaction,rid=False,postparams=post,action=action)
             else:
-                print("HEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEYA")
                 text=self.jd.call(actionurl,httpaction,rid=False,params=params,postparams=post,action=action)
         else:
             text=self.jd.call(actionurl,httpaction,rid=False,action=True)
         if not text:
             return False
         return True
-
-    # self.jd.call(actionurl,"POST",rid=False,postparams=[params],action="/linkgrabberv2/addLinks")
     
-    def addLinks(self,params=[{"autostart" : False,"links" : "","packageName" : "","extractPassword" : "","priority" : "DEFAULT","downloadPassword" : "","destinationFolder" : ""}]):
-        resp=self.action("/linkgrabberv2/addLinks",postparams=params)
-        self.jd.updateRid()
-        return resp
-        
-    # def addLinks(self,links,packageName,destinationFolder=False,extractPassword=False,autostart=False,priority="DEFAULT",downloadPassword=False):
-    #     """
-    #     Add links to the linkcollector
-
-    #     {
-    #     "autostart" : false,
-    #     "links" : null,
-    #     "packageName" : null,
-    #     "extractPassword" : null,
-    #     "priority" : "DEFAULT",
-    #     "downloadPassword" : null,
-    #     "destinationFolder" : null
-    #     }
-        
-    #     """
-    #     links=",".join(links)
-    #     params='{'
-    #     if (links):
-    #         params+='\\"links\\" : \\"'+links+'\\",'
-    #     if (packageName):
-    #         params+='\\"packageName\\" : \\"'+packageName+'\\",'
-    #     if (extractPassword):
-    #         params+='\\"extractPassword\\" : \\"'+extractPassword+'\\",'
-    #     if (priority):
-    #         params+='\\"priority\\" : \\"'+priority+'\\",'
-    #     if (downloadPassword):
-    #         params+='\\"downloadPassword\\" : \\"'+downloadPassword+'\\",'
-    #     if (destinationFolder):
-    #         params+='\\"destinationFolder\\" : \\"'+destinationFolder+'\\",'
-    #     params+='\\"autostart\\" : '+str(autostart).lower()+','
-    #     params=params[:-1]+"}"
-    #     actionurl=self.__actionUrl()
-    #     if not actionurl:
-    #         return False
-    #     text=self.jd.call(actionurl,"POST",rid=False,postparams=[params],action="/linkgrabberv2/addLinks")
-    #     if not text:
-    #         return False
-    #     print(text)
-    #     self.jd.updateRid()
-        
+       
+    
     # def queryLinksLinkcollector(self,bytesTotal=False,comment=False,status=False,enabled=False,maxResults=-1,startAt=0,packageUUIDs=False,host=False,url=False,availability=False,variantIcon=False,variantName=False,variantID=False,variants=False,priority=False):
     #     """
     #     Get the links in the linkcollector
@@ -164,7 +181,14 @@ class jddevice:
     #         return False
     #     print(text)
     #     self.jd.updateRid()
+    def queryLinksDownloadsList(self,params=[{"bytesTotal" : False, "comment" : False, "status" : False, "enabled" : False, "maxResults" : -1, "startAt" : 0, "packageUUIDs" : False, "host" : False, "url" : False, "bytesloaded" : False, "speed" : False, "eta" : False, "finished" : False, "priority" : False, "running" : False, "skipped" : False, "extractionStatus" : False}]):
+        """
+        Get the links in the downloadlist
+        """
 
+        resp=self.action("/downloadsV2/queryLinks",postparams=params)
+        self.jd.updateRid()
+        return resp
     # def queryLinksDownloads(self,bytesTotal=False,comment=False,status=False,enabled=False,maxResults=-1,startAt=0,packageUUIDs=False,host=False,url=False,bytesLoaded=False,speed=False,eta=False,finished=False,priority=False,running=False,skipped=False,extractionStatus=False):
     #     """
     #     Get the links in the downloadlist
@@ -252,8 +276,8 @@ class jddevice:
     #         return False
     #     print(text)
     #     self.jd.updateRid()
-        
-    def __actionUrl(self):
+
+def __actionUrl(self):
         if not self.jd.sessiontoken:
             return False
         return "/t_"+self.jd.sessiontoken+"_"+self.dId
@@ -362,17 +386,17 @@ class myjdapi:
     
     def updateRid(self):
         """
-        Adds 1 to rid
+        Updates Rid
         """
         self.rid=int(time.time())
-        #self.rid=self.rid+1
     def connect(self,email,password):
         """Establish connection to api
 
         :param email: My.Jdownloader User email
         :param password: My.Jdownloader User password
         :returns: boolean -- True if succesful, False if there was any error.
-
+        
+        TODO: Add token parameters so it can connect without using email and password,set tokens and then connect. 
         """
         self.loginSecret=self.__secretcreate(email,password,"server")
         self.deviceSecret=self.__secretcreate(email,password,"device")
@@ -543,3 +567,28 @@ class myjdapi:
             return False
         return jsondata
 
+    # Do I really need this? I need to do getters and setters?¿
+    # It isn't easier to simply use object.sessiontoken ?¿
+
+    
+    def getSessiontoken():
+        """
+        Returns the Sessiontoken, useful for apps so the user doesn't have to authenticate each time."
+        """
+        return self.sessiontoken
+    def getRegaintoken():
+        """
+        Returns regaintoken, token used to reauthenticate if the sessiontoken has expired, useful for apps so the user doesn't have to authenticate each time .
+        """
+        return self.regaintoken
+    def setSessiontoken(token):
+        """
+        Sets the sessiontoken
+        """
+        self.sessiontoken=token
+    def setRegaintoken(token):
+        """
+        Sets the sessiontoken
+        """
+        
+        self.regaintoken=token
