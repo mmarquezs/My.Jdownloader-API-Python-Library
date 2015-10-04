@@ -18,24 +18,21 @@ class linkgrabber:
     def __init__(self,device):
         self.device=device
     
-    def addLinks(self,params=[{"autostart" : False,"links" : "","packageName" : "","extractPassword" : "","priority" : "DEFAULT","downloadPassword" : "","destinationFolder" : ""}]):
-        """
-        Add links to the linkcollector
+    
 
-        {
-        "autostart" : false,
-        "links" : null,
-        "packageName" : null,
-        "extractPassword" : null,
-        "priority" : "DEFAULT",
-        "downloadPassword" : null,
-        "destinationFolder" : null
-        }
-        
+    def setEnabled(self):
         """
-        resp=self.device.action("/linkgrabberv2/addLinks",postparams=params)
-        self.jd.updateRid()
-        return resp
+        No idea what parameters i have to pass and/or i don't know what it does.
+        If i find out i will implement it :P
+        """
+        pass
+    
+    def getVariants(self):
+        """
+        No idea what parameters i have to pass and/or i don't know what it does.
+        If i find out i will implement it :P
+        """
+        pass
     
     def queryLinks(self,params=[{"bytesTotal" : False,"comment" : False,"status" : False,"enabled" : False, "maxResults" : -1,"startAt" : 0,"packageUUIDs" : False,"host" : False,"url" : False,"availability" : False,"variantIcon" : False,"variantName" : False,"variantID" : False,"variants" : False,"priority" : False}]):
         """
@@ -62,8 +59,105 @@ class linkgrabber:
         resp=self.action("/linkgrabberv2/queryLinks",postparams=params)
         self.jd.updateRid()
         return resp
+    def moveToDownloadlist(self):
+        """
+        No idea what parameters i have to pass and/or i don't know what it does.
+        If i find out i will implement it :P
+        """
+        pass
+
+    
+    def addLinks(self,params=[{"autostart" : False,"links" : "","packageName" : "","extractPassword" : "","priority" : "DEFAULT","downloadPassword" : "","destinationFolder" : ""}]):
+        """
+        Add links to the linkcollector
+
+        {
+        "autostart" : false,
+        "links" : null,
+        "packageName" : null,
+        "extractPassword" : null,
+        "priority" : "DEFAULT",
+        "downloadPassword" : null,
+        "destinationFolder" : null
+        }
+        
+        """
+        resp=self.device.action("/linkgrabberv2/addLinks",postparams=params)
+        self.jd.updateRid()
+        return resp
+
+    def addContainer(self):
+        """
+        No idea what parameters i have to pass and/or i don't know what it does.
+        If i find out i will implement it :P
+        """
+        pass
+
+    
+    def getchildrenchanged(self):
+        """
+        no idea what parameters i have to pass and/or i don't know what it does.
+        if i find out i will implement it :p
+        """
+        pass
 
 
+    def setPriority(self):
+        """
+        no idea what parameters i have to pass and/or i don't know what it does.
+        if i find out i will implement it :p
+        """
+        pass
+
+    def removeLinks(self):
+        """
+        No idea what parameters i have to pass and/or i don't know what it does.
+        If i find out i will implement it :P
+        """
+        pass
+    
+    def getDownloadFolderHistorySelectionBase(self):
+        """
+        No idea what parameters i have to pass and/or i don't know what it does.
+        If i find out i will implement it :P
+        """
+        pass
+    
+    def help(self):
+        """
+        No idea what parameters i have to pass and/or i don't know what it does.
+        If i find out i will implement it :P
+        """
+        pass
+    
+    def renameLink(self):
+        """
+        No idea what parameters i have to pass and/or i don't know what it does.
+        If i find out i will implement it :P
+        """
+        pass
+    
+    def moveLinks(self):
+        """
+        No idea what parameters i have to pass and/or i don't know what it does.
+        If i find out i will implement it :P
+        """
+        pass
+
+    def setVariant(self):
+        """
+        No idea what parameters i have to pass and/or i don't know what it does.
+        If i find out i will implement it :P
+        """
+        pass
+
+    def getPackageCount(self):
+        """
+        No idea what parameters i have to pass and/or i don't know what it does.
+        If i find out i will implement it :P
+        """
+        pass
+    
  class downloads:
     """
     Class that represents the downloads list of a Device
