@@ -17,7 +17,7 @@ class linkgrabber:
     """
     def __init__(self,device):
         self.device=device
-    
+        self.url='/linkgrabberv2'
     
 
     def setEnabled(self):
@@ -27,14 +27,17 @@ class linkgrabber:
         """
         pass
     
-    def getVariants(self):
+    def getVariants(self,params):
         """
         No idea what parameters i have to pass and/or i don't know what it does.
         If i find out i will implement it :P
         """
-        pass
+        
+        resp=self.device.action(self.url+"/getVariants",postparams=params)
+        self.device.jd.updateRid()
+        return resp
     
-    def queryLinks(self,params=[{"bytesTotal" : False,"comment" : False,"status" : False,"enabled" : False, "maxResults" : -1,"startAt" : 0,"packageUUIDs" : False,"host" : False,"url" : False,"availability" : False,"variantIcon" : False,"variantName" : False,"variantID" : False,"variants" : False,"priority" : False}]):
+    def queryLinks(self,params=[{"bytesTotal" : False,"comment" : False,"status" : False,"enabled" : False, "maxResults" : -1,"startAt" : 0,"packageUUIDs" : "null","host" : False,"url" : False,"availability" : False,"variantIcon" : False,"variantName" : False,"variantID" : False,"variants" : False,"priority" : False}]):
         """
         Get the links in the linkcollector
         
@@ -43,9 +46,9 @@ class linkgrabber:
         "comment"       : false,
         "status"        : false,
         "enabled"       : false,
-        "maxResults"    : false,
-        "startAt"       : false,
-        "packageUUIDs"  : false,
+        "maxResults"    : -1,
+        "startAt"       : 0,
+        "packageUUIDs"  : null,
         "hosts"         : false,
         "url"           : false,
         "availability"  : false,
@@ -56,8 +59,8 @@ class linkgrabber:
         "priority"      : false
         }
         """
-        resp=self.action("/linkgrabberv2/queryLinks",postparams=params)
-        self.jd.updateRid()
+        resp=self.device.action(self.url+"/queryLinks",postparams=params)
+        self.device.jd.updateRid()
         return resp
     def moveToDownloadlist(self):
         """
@@ -83,7 +86,7 @@ class linkgrabber:
         
         """
         resp=self.device.action("/linkgrabberv2/addLinks",postparams=params)
-        self.jd.updateRid()
+        self.device.jd.updateRid()
         return resp
 
     def addContainer(self):
@@ -158,13 +161,43 @@ class linkgrabber:
         """
         pass
     
- class downloads:
+    def renamePackage(self):
+        """
+        No idea what parameters i have to pass and/or i don't know what it does.
+        If i find out i will implement it :P
+        """
+        pass
+    def queryPackages(self):
+        """
+        No idea what parameters i have to pass and/or i don't know what it does.
+        If i find out i will implement it :P
+        """
+        pass
+    def movePackages(self):
+        """
+        No idea what parameters i have to pass and/or i don't know what it does.
+        If i find out i will implement it :P
+        """
+        pass
+    def addVariantCopy(self):
+        """
+        No idea what parameters i have to pass and/or i don't know what it does.
+        If i find out i will implement it :P
+        """
+        pass
+    
+
+   
+
+        
+    
+class downloads:
     """
     Class that represents the downloads list of a Device
     """
     def __init__(self,device):
         self.device=device
-    
+        pass
       
 class jddevice:
     """
@@ -218,8 +251,15 @@ class jddevice:
                             data+='\\"'+param+'\\" : '+str(postparam[param])+','
                     data=data[:-1]+"}"
                 else:
-                    data=postparam
-                post+=[data]
+                    data="" 
+                    if type(postparam)==bool:
+                        data=[str(postparam).lower()]
+                    elif type(postparam)==int:
+                        data=[str(postparam)]
+                    else:
+                        data=postparam
+                    post+=data
+            print(post)
             if not params:
                 text=self.jd.call(actionurl,httpaction,rid=False,postparams=post,action=action)
             else:
@@ -228,7 +268,7 @@ class jddevice:
             text=self.jd.call(actionurl,httpaction,rid=False,action=True)
         if not text:
             return False
-        return True
+        return text
     
        
     
@@ -371,7 +411,7 @@ class jddevice:
     #     print(text)
     #     self.jd.updateRid()
 
-def __actionUrl(self):
+    def __actionUrl(self):
         if not self.jd.sessiontoken:
             return False
         return "/t_"+self.jd.sessiontoken+"_"+self.dId
