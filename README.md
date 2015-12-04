@@ -19,7 +19,7 @@ import myjdapi
 jd=myjdapi.myjdapi()
 jd.connect("example@example.com","password")
 jd.getDevices()
-jd.getDevice(name="Device1").addLinks([{"links" : "https://mega.nz/#!xxxxxxxxxxxxxxxxxxxxxxxxxxxx,http://mediafire.com/download/xxxxxxxxxxxxxxxx/"}])
+jd.getDevice(name="DeviceName").linkgrabber.addLinks([{"autostart" : False, "links" : "https://mega.nz/#!xxxxxxxxxxxxxxxxxxxxxxxxxxxx,http://mediafire.com/download/xxxxxxxxxxxxxxxx/","packageName" : TEST" }])
 
 ```
 
