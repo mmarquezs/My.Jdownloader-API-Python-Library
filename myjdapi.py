@@ -20,24 +20,39 @@ class linkgrabber:
         self.url='/linkgrabberv2'
     
 
-    def setEnabled(self):
+    def setEnabled(self, params):
         """
-        No idea what parameters i have to pass and/or i don't know what it does.
-        If i find out i will implement it :P
+        NOT WORKING
+
+        My guess, it Enables/Disables a download, but.... i haven't got it working.
+        
+        :param params: List with a boolean (enable/disable download), my guess the parameters are package uuid, download uuid. Ex: [False,2453556,2334455]. 
+        :type: List
+        :rtype: 
+
         """
-        pass
+        
+        resp=self.device.action(self.url+"/setEnabled",postparams=params)
+        self.device.jd.updateRid()
+        return resp
     
     def getVariants(self,params):
         """
-        No idea what parameters i have to pass and/or i don't know what it does.
-        If i find out i will implement it :P
+        Gets the variants of a url/download (not package), for example a youtube link gives you a package with three downloads, 
+        the audio, the video and a picture, and each of those downloads have different variants (audio quality, video quality, and picture quality).
+        
+        :param params: List with the UUID of the download you want the variants. Ex: [232434]
+        :type: List
+        :rtype: Variants in a list with dictionaries like this one: [{'id': 'M4A_256', 'name': '256kbit/s M4A-Audio'}, {'id': 'AAC_256', 'name': '256kbit/s AAC-Audio'},.......]
+        
+        
         """
         
         resp=self.device.action(self.url+"/getVariants",postparams=params)
         self.device.jd.updateRid()
         return resp
     
-    def queryLinks(self,params=[{"bytesTotal" : False,"comment" : False,"status" : False,"enabled" : False, "maxResults" : -1,"startAt" : 0,"packageUUIDs" : "null","host" : False,"url" : False,"availability" : False,"variantIcon" : False,"variantName" : False,"variantID" : False,"variants" : False,"priority" : False}]):
+    def queryLinks(self,params=[{"bytesTotal" : False,"comment" : False,"status" : False,"enabled" : False, "maxResults" : 30,"startAt" : 0,"packageUUIDs" : "null","host" : False,"url" : False,"availability" : False,"variantIcon" : False,"variantName" : False,"variantID" : False,"variants" : False,"priority" : False}]):
         """
         Get the links in the linkcollector
         
@@ -62,12 +77,16 @@ class linkgrabber:
         resp=self.device.action(self.url+"/queryLinks",postparams=params)
         self.device.jd.updateRid()
         return resp
-    def moveToDownloadlist(self):
+    def moveToDownloadlist(self,params):
         """
         No idea what parameters i have to pass and/or i don't know what it does.
         If i find out i will implement it :P
         """
-        pass
+        
+        resp=self.device.action(self.url+"/moveToDownloadlist",postparams=params)
+        self.device.jd.updateRid()
+        return resp
+        
 
     
     def addLinks(self,params=[{"autostart" : False,"links" : "","packageName" : "","extractPassword" : "","priority" : "DEFAULT","downloadPassword" : "","destinationFolder" : ""}]):
@@ -126,12 +145,16 @@ class linkgrabber:
         """
         pass
     
-    def help(self):
+    def help_(self):
         """
         No idea what parameters i have to pass and/or i don't know what it does.
         If i find out i will implement it :P
         """
-        pass
+
+        resp=self.device.action("/linkgrabberv2/help","GET")
+        self.device.jd.updateRid()
+        return resp
+        
     
     def renameLink(self):
         """
@@ -234,6 +257,7 @@ class jddevice:
             return False
         httpaction="POST"
         actionurl=self.__actionUrl()
+        print(actionurl)
         if not actionurl:
             return False
         if postparams:
@@ -250,12 +274,15 @@ class jddevice:
                         else:
                             data+='\\"'+param+'\\" : '+str(postparam[param])+','
                     data=data[:-1]+"}"
+                    post+=[data]
                 else:
                     data="" 
                     if type(postparam)==bool:
                         data=[str(postparam).lower()]
                     elif type(postparam)==int:
-                        data=[str(postparam)]
+                        data=['\\"'+str(postparam)+'\\"']
+                    elif type(postparam)==list:
+                        data=['\\"'+str(postparam)+'\\"']
                     else:
                         data=postparam
                     post+=data
@@ -265,10 +292,10 @@ class jddevice:
             else:
                 text=self.jd.call(actionurl,httpaction,rid=False,params=params,postparams=post,action=action)
         else:
-            text=self.jd.call(actionurl,httpaction,rid=False,action=True)
+            text=self.jd.call(actionurl,httpaction,rid=False,action=action)
         if not text:
             return False
-        return text
+        return text['data']
     
        
     
@@ -695,7 +722,12 @@ class myjdapi:
             else:
                 response=self.__decrypt(self.serverEncryptionToken,encryptedresp.text)
         else:
-            response=self.__decrypt(self.deviceEncryptionToken,encryptedresp.text)
+            if (params or postparams):
+                response=self.__decrypt(self.deviceEncryptionToken,encryptedresp.text)
+            else:
+                response=encryptedresp.text
+                
+                return {"data" : response}
         jsondata=json.loads(response.decode('utf-8'))
         if jsondata['rid']!=self.rid:
             return False
