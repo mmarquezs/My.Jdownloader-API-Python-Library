@@ -24,7 +24,7 @@ class linkgrabber:
         """
         NOT WORKING
 
-        My guess, it Enables/Disables a download, but.... i haven't got it working.
+        My guess is that it Enables/Disables a download, but i haven't got it working.
         
         :param params: List with a boolean (enable/disable download), my guess the parameters are package uuid, download uuid. Ex: [False,2453556,2334455]. 
         :type: List
@@ -52,10 +52,26 @@ class linkgrabber:
         self.device.jd.updateRid()
         return resp
     
-    def queryLinks(self,params=[{"bytesTotal" : False,"comment" : False,"status" : False,"enabled" : False, "maxResults" : 30,"startAt" : 0,"packageUUIDs" : "null","host" : False,"url" : False,"availability" : False,"variantIcon" : False,"variantName" : False,"variantID" : False,"variants" : False,"priority" : False}]):
+    def queryLinks(self,params=[
+        {
+        "bytesTotal"    : True,
+        "comment"       : True,
+        "status"        : True,
+        "enabled"       : True,
+        "maxResults"    : -1,
+        "startAt"       : 0,
+        "hosts"         : True,
+        "url"           : True,
+        "availability"  : True,
+        "variantIcon"   : True,
+        "variantName"   : True,
+        "variantID"     : True,
+        "variants"      : True,
+        "priority"      : True
+        }]):
         """
-        Get the links in the linkcollector
-        
+        Get the links in the linkcollector/linkgrabber
+        :param params: A dictionary with options. The default dictionary is configured so it returns you all  the downloads with all details, but you can put your own with your options. All the options  available are this ones:
         {
         "bytesTotal"    : false,
         "comment"       : false,
@@ -73,6 +89,12 @@ class linkgrabber:
         "variants"      : false,
         "priority"      : false
         }
+
+        :type: Dictionary
+        :rtype: List of dictionaries of this style:
+        [{'enabled': True, 'name': 'The Rick And Morty Theory - The Original Morty_ - Cartoon Conspiracy (Ep. 74) @ChannelFred (192kbit).m4a', 'url': 'youtubev2://DEMUX_M4A_192_720P_V4/d1NZf1w2BxQ/', 'availability': 'ONLINE', 'bytesTotal': 68548274, 'uuid': 1450430889576, 'variants': True, 'variant': {'name': '192kbit/s M4A-Audio', 'id': 'DEMUX_M4A_192_720P_V4'}, 'packageUUID': 1450430888524}, {'enabled': True, 'name': 'The Rick And Morty Theory - The Original Morty_ - Cartoon Conspiracy (Ep. 74) @ChannelFred (720p).mp4', 'url': 'youtubev2://MP4_720/d1NZf1w2BxQ/', 'availability': 'ONLINE', 'bytesTotal': 68548274, 'uuid': 1450430889405, 'variants': True, 'variant': {'name': '720p MP4-Video', 'id': 'MP4_720'}, 'packageUUID': 1450430888524}, {'enabled': True, 'name': 'The Rick And Morty Theory - The Original Morty_ - Cartoon Conspiracy (Ep. 74) @ChannelFred (anglès).srt', 'url': 'youtubev2://SUBTITLES/d1NZf1w2BxQ/', 'uuid': 1450430889483, 'availability': 'ONLINE', 'packageUUID': 1450430888524}, {'enabled': True, 'name': 'The Rick And Morty Theory - The Original Morty_ - Cartoon Conspiracy (Ep. 74) @ChannelFred (BQ).jpg', 'url': 'youtubev2://IMAGE_MAX/d1NZf1w2BxQ/', 'availability': 'ONLINE', 'bytesTotal': 116259, 'uuid': 1450430888525, 'variants': True, 'variant': {'name': 'Imatge de la millor qualitat', 'id': 'IMAGE_MAX'}, 'packageUUID': 1450430888524}, {'enabled': True, 'name': 'Seth MacFarlane Monologue_ The Voices - Saturday Night Live (1080p).mp4', 'url': 'youtubev2://MP4_DASH_1080_AAC256/EueeNj98E6I/', 'availability': 'ONLINE', 'bytesTotal': 102698747, 'uuid': 1450430944315, 'variants': True, 'variant': {'name': '1080p MP4-Video', 'id': 'MP4_DASH_1080_AAC256'}, 'packageUUID': 1450430944272}, {'enabled': True, 'name': 'Seth MacFarlane Monologue_ The Voices - Saturday Night Live (256kbit).m4a', 'url': 'youtubev2://M4A_256/EueeNj98E6I/', 'availability': 'ONLINE', 'bytesTotal': 10865453, 'uuid': 1450430944583, 'variants': True, 'variant': {'name': '256kbit/s M4A-Audio', 'id': 'M4A_256'}, 'packageUUID': 1450430944272}, {'enabled': True, 'name': 'Seth MacFarlane Monologue_ The Voices - Saturday Night Live (HQ).jpg', 'url': 'youtubev2://IMAGE_HQ/EueeNj98E6I/', 'availability': 'ONLINE', 'bytesTotal': 31819, 'uuid': 1450430944275, 'variants': True, 'variant': {'name': "Imatge d'alta qualitat", 'id': 'IMAGE_HQ'}, 'packageUUID': 1450430944272}]
+
+        
         """
         resp=self.device.action(self.url+"/queryLinks",postparams=params)
         self.device.jd.updateRid()
