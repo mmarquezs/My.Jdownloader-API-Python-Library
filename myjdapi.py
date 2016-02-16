@@ -1,3 +1,4 @@
+# -*- encoding: utf-8 -*-
 import hashlib
 import hmac
 import requests
@@ -7,9 +8,9 @@ import urllib
 import binascii
 import base64
 from Crypto.Cipher import AES
-BS=16
-pad = lambda s: s + ((BS - len(s) % BS) * chr(BS - len(s) % BS)).encode()
-unpad = lambda s : s[0:-s[-1]]
+BS = 16
+pad = lambda s: s + (BS - len(s) % BS) * chr(BS - len(s) % BS) 
+unpad = lambda s : s[0:-ord(s[-1])]
 
 class linkgrabber:
     """
@@ -686,9 +687,9 @@ class myjdapi:
                 call=url
                 for index,param in enumerate(params):
                     if index==0:
-                        call+="?"+param[0]+"="+urllib.parse.quote(param[1])
+                        call+="?"+param[0]+"="+urllib.quote(param[1])
                     else:
-                        call+="&"+param[0]+"="+urllib.parse.quote(param[1])
+                        call+="&"+param[0]+"="+urllib.quote(param[1])
                         # Todo : Add an exception if the param is loginSecret so it doesn't get url encoded.
                 if rid:
                     call+="&rid="+str(self.rid)
@@ -706,9 +707,9 @@ class myjdapi:
                 
                 for index,param in enumerate(params):
                     if index==0:
-                        call+="?"+param[0]+"="+urllib.parse.quote(param[1])
+                        call+="?"+param[0]+"="+urllib.quote(param[1])
                     else:
-                        call+="&"+param[0]+"="+urllib.parse.quote(param[1])
+                        call+="&"+param[0]+"="+urllib.quote(param[1])
                         # Todo : Add an exception if the param is loginSecret so it doesn't get url encoded.
                 if rid:
                     call+="&rid="+str(self.rid)
