@@ -1,77 +1,97 @@
+# -*- encoding: utf-8 -*-
 import hashlib
 import hmac
-import requests
 import json
 import time
-import urllib
-import binascii
+try:
+    from urllib.request import urlopen
+    from urllib.parse import quote
+except:                         #For Python 2
+    from urllib import quote
+    from urllib import urlopen
 import base64
+import requests
 from Crypto.Cipher import AES
-BS=16
-pad = lambda s: s + ((BS - len(s) % BS) * chr(BS - len(s) % BS)).encode()
-unpad = lambda s : s[0:-s[-1]]
+BS = 16
 
-class linkgrabber:
+def PAD(s):
+    try:
+        return s + ((BS - len(s) % BS) * chr(BS - len(s) % BS)).encode()
+    except:                     # For python 2
+        return s + (BS - len(s) % BS) * chr(BS - len(s) % BS)
+
+def UNPAD(s):
+    try:
+        return s[0:-s[-1]]
+    except:                     # For python 2
+        return s[0:-ord(s[-1])]
+
+class Linkgrabber:
     """
     Class that represents the linkgrabber of a Device
     """
-    def __init__(self,device):
-        self.device=device
-        self.url='/linkgrabberv2'
-    
+    def __init__(self, device):
+        self.device = device
+        self.url = '/linkgrabberv2'
 
-    def setEnabled(self, params):
+    def set_enabled(self, params):
         """
         NOT WORKING
 
         My guess is that it Enables/Disables a download, but i haven't got it working.
-        
-        :param params: List with a boolean (enable/disable download), my guess the parameters are package uuid, download uuid. Ex: [False,2453556,2334455]. 
+
+        :param params: List with a boolean (enable/disable download), my guess
+        the parameters are package uuid, download uuid. Ex:
+        [False,2453556,2334455].
         :type: List
-        :rtype: 
+        :rtype:
 
         """
-        
-        resp=self.device.action(self.url+"/setEnabled",postparams=params)
+        resp = self.device.action(self.url+"/setEnabled", postparams=params)
         self.device.jd.updateRid()
         return resp
-    
-    def getVariants(self,params):
+
+    def get_variants(self, params):
         """
-        Gets the variants of a url/download (not package), for example a youtube link gives you a package with three downloads, 
-        the audio, the video and a picture, and each of those downloads have different variants (audio quality, video quality, and picture quality).
-        
+        Gets the variants of a url/download (not package), for example a youtube
+        link gives you a package with three downloads, the audio, the video and
+        a picture, and each of those downloads have different variants (audio
+        quality, video quality, and picture quality).
+
         :param params: List with the UUID of the download you want the variants. Ex: [232434]
         :type: List
-        :rtype: Variants in a list with dictionaries like this one: [{'id': 'M4A_256', 'name': '256kbit/s M4A-Audio'}, {'id': 'AAC_256', 'name': '256kbit/s AAC-Audio'},.......]
-        
-        
+        :rtype: Variants in a list with dictionaries like this one: [{'id':
+        'M4A_256', 'name': '256kbit/s M4A-Audio'}, {'id': 'AAC_256', 'name':
+        '256kbit/s AAC-Audio'},.......]
         """
-        
-        resp=self.device.action(self.url+"/getVariants",postparams=params)
+        resp = self.device.action(self.url+"/getVariants", postparams=params)
         self.device.jd.updateRid()
         return resp
-    
-    def queryLinks(self,params=[
-        {
-        "bytesTotal"    : True,
-        "comment"       : True,
-        "status"        : True,
-        "enabled"       : True,
-        "maxResults"    : -1,
-        "startAt"       : 0,
-        "hosts"         : True,
-        "url"           : True,
-        "availability"  : True,
-        "variantIcon"   : True,
-        "variantName"   : True,
-        "variantID"     : True,
-        "variants"      : True,
-        "priority"      : True
-        }]):
+
+    def query_links(self, params=[
+            {
+                "bytesTotal"    : True,
+                "comment"       : True,
+                "status"        : True,
+                "enabled"       : True,
+                "maxResults"    : -1,
+                "startAt"       : 0,
+                "hosts"         : True,
+                "url"           : True,
+                "availability"  : True,
+                "variantIcon"   : True,
+                "variantName"   : True,
+                "variantID"     : True,
+                "variants"      : True,
+                "priority"      : True
+            }]):
         """
         Get the links in the linkcollector/linkgrabber
-        :param params: A dictionary with options. The default dictionary is configured so it returns you all  the downloads with all details, but you can put your own with your options. All the options  available are this ones:
+
+        :param params: A dictionary with options. The default dictionary is
+        configured so it returns you all the downloads with all details, but you
+        can put your own with your options. All the options available are this
+        ones:
         {
         "bytesTotal"    : false,
         "comment"       : false,
@@ -89,29 +109,68 @@ class linkgrabber:
         "variants"      : false,
         "priority"      : false
         }
-
         :type: Dictionary
         :rtype: List of dictionaries of this style:
-        [{'enabled': True, 'name': 'The Rick And Morty Theory - The Original Morty_ - Cartoon Conspiracy (Ep. 74) @ChannelFred (192kbit).m4a', 'url': 'youtubev2://DEMUX_M4A_192_720P_V4/d1NZf1w2BxQ/', 'availability': 'ONLINE', 'bytesTotal': 68548274, 'uuid': 1450430889576, 'variants': True, 'variant': {'name': '192kbit/s M4A-Audio', 'id': 'DEMUX_M4A_192_720P_V4'}, 'packageUUID': 1450430888524}, {'enabled': True, 'name': 'The Rick And Morty Theory - The Original Morty_ - Cartoon Conspiracy (Ep. 74) @ChannelFred (720p).mp4', 'url': 'youtubev2://MP4_720/d1NZf1w2BxQ/', 'availability': 'ONLINE', 'bytesTotal': 68548274, 'uuid': 1450430889405, 'variants': True, 'variant': {'name': '720p MP4-Video', 'id': 'MP4_720'}, 'packageUUID': 1450430888524}, {'enabled': True, 'name': 'The Rick And Morty Theory - The Original Morty_ - Cartoon Conspiracy (Ep. 74) @ChannelFred (anglès).srt', 'url': 'youtubev2://SUBTITLES/d1NZf1w2BxQ/', 'uuid': 1450430889483, 'availability': 'ONLINE', 'packageUUID': 1450430888524}, {'enabled': True, 'name': 'The Rick And Morty Theory - The Original Morty_ - Cartoon Conspiracy (Ep. 74) @ChannelFred (BQ).jpg', 'url': 'youtubev2://IMAGE_MAX/d1NZf1w2BxQ/', 'availability': 'ONLINE', 'bytesTotal': 116259, 'uuid': 1450430888525, 'variants': True, 'variant': {'name': 'Imatge de la millor qualitat', 'id': 'IMAGE_MAX'}, 'packageUUID': 1450430888524}, {'enabled': True, 'name': 'Seth MacFarlane Monologue_ The Voices - Saturday Night Live (1080p).mp4', 'url': 'youtubev2://MP4_DASH_1080_AAC256/EueeNj98E6I/', 'availability': 'ONLINE', 'bytesTotal': 102698747, 'uuid': 1450430944315, 'variants': True, 'variant': {'name': '1080p MP4-Video', 'id': 'MP4_DASH_1080_AAC256'}, 'packageUUID': 1450430944272}, {'enabled': True, 'name': 'Seth MacFarlane Monologue_ The Voices - Saturday Night Live (256kbit).m4a', 'url': 'youtubev2://M4A_256/EueeNj98E6I/', 'availability': 'ONLINE', 'bytesTotal': 10865453, 'uuid': 1450430944583, 'variants': True, 'variant': {'name': '256kbit/s M4A-Audio', 'id': 'M4A_256'}, 'packageUUID': 1450430944272}, {'enabled': True, 'name': 'Seth MacFarlane Monologue_ The Voices - Saturday Night Live (HQ).jpg', 'url': 'youtubev2://IMAGE_HQ/EueeNj98E6I/', 'availability': 'ONLINE', 'bytesTotal': 31819, 'uuid': 1450430944275, 'variants': True, 'variant': {'name': "Imatge d'alta qualitat", 'id': 'IMAGE_HQ'}, 'packageUUID': 1450430944272}]
-
-        
+        [{'enabled': True, 'name': 'The Rick And Morty Theory - The Original
+        Morty_ - Cartoon Conspiracy (Ep. 74) @ChannelFred (192kbit).m4a', 'url':
+        'youtubev2://DEMUX_M4A_192_720P_V4/d1NZf1w2BxQ/', 'availability':
+        'ONLINE', 'bytesTotal': 68548274, 'uuid': 1450430889576, 'variants':
+        True, 'variant': {'name': '192kbit/s M4A-Audio', 'id':
+        'DEMUX_M4A_192_720P_V4'}, 'packageUUID': 1450430888524}, {'enabled':
+        True, 'name': 'The Rick And Morty Theory - The Original Morty_ - Cartoon
+        Conspiracy (Ep. 74) @ChannelFred (720p).mp4', 'url':
+        'youtubev2://MP4_720/d1NZf1w2BxQ/', 'availability': 'ONLINE',
+        'bytesTotal': 68548274, 'uuid': 1450430889405, 'variants': True,
+        'variant': {'name': '720p MP4-Video', 'id': 'MP4_720'}, 'packageUUID':
+        1450430888524}, {'enabled': True, 'name': 'The Rick And Morty Theory -
+        The Original Morty_ - Cartoon Conspiracy (Ep. 74) @ChannelFred
+        (anglès).srt', 'url': 'youtubev2://SUBTITLES/d1NZf1w2BxQ/', 'uuid':
+        1450430889483, 'availability': 'ONLINE', 'packageUUID': 1450430888524},
+        {'enabled': True, 'name': 'The Rick And Morty Theory - The Original
+        Morty_ - Cartoon Conspiracy (Ep. 74) @ChannelFred (BQ).jpg', 'url':
+        'youtubev2://IMAGE_MAX/d1NZf1w2BxQ/', 'availability': 'ONLINE',
+        'bytesTotal': 116259, 'uuid': 1450430888525, 'variants': True,
+        'variant': {'name': 'Imatge de la millor qualitat', 'id': 'IMAGE_MAX'},
+        'packageUUID': 1450430888524}, {'enabled': True, 'name': 'Seth
+        MacFarlane Monologue_ The Voices - Saturday Night Live (1080p).mp4',
+        'url': 'youtubev2://MP4_DASH_1080_AAC256/EueeNj98E6I/', 'availability':
+        'ONLINE', 'bytesTotal': 102698747, 'uuid': 1450430944315, 'variants':
+        True, 'variant': {'name': '1080p MP4-Video', 'id':
+        'MP4_DASH_1080_AAC256'}, 'packageUUID': 1450430944272}, {'enabled':
+        True, 'name': 'Seth MacFarlane Monologue_ The Voices - Saturday Night
+        Live (256kbit).m4a', 'url': 'youtubev2://M4A_256/EueeNj98E6I/',
+        'availability': 'ONLINE', 'bytesTotal': 10865453, 'uuid': 1450430944583,
+        'variants': True, 'variant': {'name': '256kbit/s M4A-Audio', 'id':
+        'M4A_256'}, 'packageUUID': 1450430944272}, {'enabled': True, 'name':
+        'Seth MacFarlane Monologue_ The Voices - Saturday Night Live (HQ).jpg',
+        'url': 'youtubev2://IMAGE_HQ/EueeNj98E6I/', 'availability': 'ONLINE',
+        'bytesTotal': 31819, 'uuid': 1450430944275, 'variants': True, 'variant':
+        {'name': "Imatge d'alta qualitat", 'id': 'IMAGE_HQ'}, 'packageUUID':
+        1450430944272}]
         """
-        resp=self.device.action(self.url+"/queryLinks",postparams=params)
+        resp = self.device.action(self.url+"/queryLinks", postparams=params)
         self.device.jd.updateRid()
         return resp
-    def moveToDownloadlist(self,params):
+
+    def moveto_downloadlist(self, params):
         """
         No idea what parameters i have to pass and/or i don't know what it does.
         If i find out i will implement it :P
         """
-        
-        resp=self.device.action(self.url+"/moveToDownloadlist",postparams=params)
+        resp = self.device.action(self.url+"/moveToDownloadlist", postparams=params)
         self.device.jd.updateRid()
         return resp
-        
 
-    
-    def addLinks(self,params=[{"autostart" : False,"links" : "","packageName" : "","extractPassword" : "","priority" : "DEFAULT","downloadPassword" : "","destinationFolder" : ""}]):
+    def add_links(self, params=[
+            {
+                "autostart" : False,
+                "links" : "",
+                "packageName" : "",
+                "extractPassword" : "",
+                "priority" : "DEFAULT",
+                "downloadPassword" : "",
+                "destinationFolder" : ""
+            }]):
         """
         Add links to the linkcollector
 
@@ -124,137 +183,126 @@ class linkgrabber:
         "downloadPassword" : null,
         "destinationFolder" : null
         }
-        
         """
-        resp=self.device.action("/linkgrabberv2/addLinks",postparams=params)
+        resp = self.device.action("/linkgrabberv2/addLinks",postparams=params)
         self.device.jd.updateRid()
         return resp
 
-    def addContainer(self):
+    def add_container(self):
         """
         No idea what parameters i have to pass and/or i don't know what it does.
         If i find out i will implement it :P
         """
         pass
 
-    
-    def getchildrenchanged(self):
+    def get_childrenchanged(self):
         """
         no idea what parameters i have to pass and/or i don't know what it does.
         if i find out i will implement it :p
         """
         pass
 
-
-    def setPriority(self):
+    def set_priority(self):
         """
         no idea what parameters i have to pass and/or i don't know what it does.
         if i find out i will implement it :p
         """
         pass
 
-    def removeLinks(self):
+    def remove_links(self):
         """
         No idea what parameters i have to pass and/or i don't know what it does.
         If i find out i will implement it :P
         """
         pass
-    
-    def getDownloadFolderHistorySelectionBase(self):
+
+    def get_downfolderhistoryselectbase(self):
         """
         No idea what parameters i have to pass and/or i don't know what it does.
         If i find out i will implement it :P
         """
         pass
-    
+
     def help_(self):
         """
-        No idea what parameters i have to pass and/or i don't know what it does.
-        If i find out i will implement it :P
+        It returns the API help, but to be honest is not very helpful.
         """
-
-        resp=self.device.action("/linkgrabberv2/help","GET")
+        resp = self.device.action("/linkgrabberv2/help", "GET")
         self.device.jd.updateRid()
         return resp
-        
-    
-    def renameLink(self):
-        """
-        No idea what parameters i have to pass and/or i don't know what it does.
-        If i find out i will implement it :P
-        """
-        pass
-    
-    def moveLinks(self):
+
+    def rename_link(self):
         """
         No idea what parameters i have to pass and/or i don't know what it does.
         If i find out i will implement it :P
         """
         pass
 
-    def setVariant(self):
+    def move_links(self):
         """
         No idea what parameters i have to pass and/or i don't know what it does.
         If i find out i will implement it :P
         """
         pass
 
-    def getPackageCount(self):
+    def set_variant(self):
         """
         No idea what parameters i have to pass and/or i don't know what it does.
         If i find out i will implement it :P
         """
         pass
-    
-    def renamePackage(self):
-        """
-        No idea what parameters i have to pass and/or i don't know what it does.
-        If i find out i will implement it :P
-        """
-        pass
-    def queryPackages(self):
-        """
-        No idea what parameters i have to pass and/or i don't know what it does.
-        If i find out i will implement it :P
-        """
-        pass
-    def movePackages(self):
-        """
-        No idea what parameters i have to pass and/or i don't know what it does.
-        If i find out i will implement it :P
-        """
-        pass
-    def addVariantCopy(self):
-        """
-        No idea what parameters i have to pass and/or i don't know what it does.
-        If i find out i will implement it :P
-        """
-        pass
-    
 
-   
+    def get_package_count(self):
+        """
+        No idea what parameters i have to pass and/or i don't know what it does.
+        If i find out i will implement it :P
+        """
+        pass
 
-        
-    
-class downloads:
+    def rename_package(self):
+        """
+        No idea what parameters i have to pass and/or i don't know what it does.
+        If i find out i will implement it :P
+        """
+        pass
+
+    def query_packages(self):
+        """
+        No idea what parameters i have to pass and/or i don't know what it does.
+        If i find out i will implement it :P
+        """
+        pass
+
+    def move_packages(self):
+        """
+        No idea what parameters i have to pass and/or i don't know what it does.
+        If i find out i will implement it :P
+        """
+        pass
+
+    def add_variant_copy(self):
+        """
+        No idea what parameters i have to pass and/or i don't know what it does.
+        If i find out i will implement it :P
+        """
+        pass
+
+class Downloads:
     """
     Class that represents the downloads list of a Device
     """
-    def __init__(self,device):
-        self.device=device
-        pass
-      
+    def __init__(self, device):
+        self.device = device
+
 class jddevice:
     """
     Class that represents a JD device and it's functions
-    
     """
     def __init__(self,jd,deviceDict):
         """ This functions initializates the device instance.
         It uses the provided dictionary to create the device.
 
         :param deviceDict: Device dictionary
-        
         """
         self.name=deviceDict["name"]
         self.dId=deviceDict["id"]
@@ -265,15 +313,12 @@ class jddevice:
     def action(self,action=False,params=False,postparams=False):
         """
         Execute any action in the device using the postparams and params.
-        
         All the info of which params are required and what are they default value, type,etc 
         can be found in the MY.Jdownloader API Specifications ( https://goo.gl/pkJ9d1 ).
 
-
         :param params: Params in the url, in a list of tuples. Example: /example?param1=ex&param2=ex2 [("param1","ex"),("param2","ex2")]
-        :param postparams: List of Params that are send in the post. 
+        :param postparams: List of Params that are send in the post.
 
-        
         """
         if not action:
             return False
@@ -318,52 +363,6 @@ class jddevice:
         if not text:
             return False
         return text['data']
-    
-       
-    
-    # def queryLinksLinkcollector(self,bytesTotal=False,comment=False,status=False,enabled=False,maxResults=-1,startAt=0,packageUUIDs=False,host=False,url=False,availability=False,variantIcon=False,variantName=False,variantID=False,variants=False,priority=False):
-    #     """
-    #     Get the links in the linkcollector
-        
-    #     """
-    #     params='{'
-    #     if (bytesTotal):
-    #         params+='\\"bytesTotal\\" : \\"'+str(bytesTotal).lower()+'\\",'
-    #     if (comment):
-    #         params+='\\"comment\\" : \\"'+str(comment).lower()+'\\",'
-    #     if (status):
-    #         params+='\\"status\\" : \\"'+str(extractPassword).lower()+'\\",'
-    #     if (enabled):
-    #         params+='\\"enabled\\" : \\"'+str(enabled).lower()+'\\",'
-    #     params+='\\"maxResults\\" : \\"'+str(maxResults)+'\\",'
-    #     params+='\\"startAT\\" : \\"'+str(startAt)+'\\",'
-    #     if (packageUUIDs):
-    #         params+='\\"packageUUIDs\\" : \\"'+packageUUIDs+'\\",'
-    #     if (host):
-    #         params+='\\"host\\" : \\"'+str(host).lower()+'\\",'
-    #     if (url):
-    #         params+='\\"url\\" : \\"'+str(url).lower()+'\\",'
-    #     if (availability):
-    #         params+='\\"availability\\" : \\"'+str(availability).lower()+'\\",'
-    #     if (variantIcon):
-    #         params+='\\"variantIcon\\" : \\"'+str(variantIcon).lower()+'\\",'
-    #     if (variantName):
-    #         params+='\\"variantName\\" : \\"'+str(variantName).lower()+'\\",'
-    #     if (variantID):
-    #         params+='\\"variantID\\" : \\"'+str(variantID).lower()+'\\",'
-    #     if (variants):
-    #         params+='\\"variants\\" : \\"'+str(variants).lower()+'\\",'
-    #     if (priority):
-    #         params+='\\"priority\\" : \\"'+str(priority).lower()+'\\",'
-    #     params=params[:-1]+"}"
-    #     actionurl=self.__actionUrl()
-    #     if not actionurl:
-    #         return False
-    #     text=self.jd.call(actionurl,"POST",rid=False,postparams=[params],action="/linkgrabberv2/queryLinks")
-    #     if not text:
-    #         return False
-    #     print(text)
-    #     self.jd.updateRid()
     def queryLinksDownloadsList(self,params=[{"bytesTotal" : False, "comment" : False, "status" : False, "enabled" : False, "maxResults" : -1, "startAt" : 0, "packageUUIDs" : False, "host" : False, "url" : False, "bytesloaded" : False, "speed" : False, "eta" : False, "finished" : False, "priority" : False, "running" : False, "skipped" : False, "extractionStatus" : False}]):
         """
         Get the links in the downloadlist
@@ -372,94 +371,7 @@ class jddevice:
         resp=self.action("/downloadsV2/queryLinks",postparams=params)
         self.jd.updateRid()
         return resp
-    # def queryLinksDownloads(self,bytesTotal=False,comment=False,status=False,enabled=False,maxResults=-1,startAt=0,packageUUIDs=False,host=False,url=False,bytesLoaded=False,speed=False,eta=False,finished=False,priority=False,running=False,skipped=False,extractionStatus=False):
-    #     """
-    #     Get the links in the downloadlist
-        
-    #     """
-    #     params='{'
-    #     if (bytesTotal):
-    #         params+='\\"bytesTotal\\" : \\"'+str(bytesTotal).lower()+'\\",'
-    #     if (comment):
-    #         params+='\\"comment\\" : \\"'+str(comment).lower()+'\\",'
-    #     if (status):
-    #         params+='\\"status\\" : \\"'+str(extractPassword).lower()+'\\",'
-    #     if (enabled):
-    #         params+='\\"enabled\\" : \\"'+str(enabled).lower()+'\\",'
-    #     params+='\\"maxResults\\" : \\"'+str(maxResults)+'\\",'
-    #     params+='\\"startAT\\" : \\"'+str(startAt)+'\\",'
-    #     if (packageUUIDs):
-    #         params+='\\"packageUUIDs\\" : \\"'+packageUUIDs+'\\",'
-    #     if (host):
-    #         params+='\\"host\\" : \\"'+str(host).lower()+'\\",'
-    #     if (url):
-    #         params+='\\"url\\" : \\"'+str(url).lower()+'\\",'
-    #     if (bytesLoaded):
-    #         params+='\\"bytesLoaded\\" : \\"'+str(bytesLoaded).lower()+'\\",'
-    #     if (speed):
-    #         params+='\\"speed\\" : \\"'+str(speed).lower()+'\\",'
-    #     if (eta):
-    #         params+='\\"eta\\" : \\"'+str(eta).lower()+'\\",'
-    #     if (finished):
-    #         params+='\\"finished\\" : \\"'+str(finished).lower()+'\\",'
-    #     if (priority):
-    #         params+='\\"priority\\" : \\"'+str(priority).lower()+'\\",'
-    #     if (running):
-    #         params+='\\"running\\" : \\"'+str(running).lower()+'\\",'
-    #     if (skipped):
-    #         params+='\\"skipped\\" : \\"'+str(skipped).lower()+'\\",'
-    #     if (extractionStatus):
-    #         params+='\\"extractionStatus\\" : \\"'+str(extractionStatus).lower()+'\\",'
-    #     params=params[:-1]+"}"
-    #     actionurl=self.__actionUrl()
-    #     if not actionurl:
-    #         return False
-    #     text=self.jd.call(actionurl,"POST",rid=False,postparams=[params],action="/downloadsV2/queryLinks")
-    #     if not text:
-    #         return False
-    #     print(text)
-    #     self.jd.updateRid()
-
-    # def queryPackagesDownloads(self,bytesTotal=False,comment=False,status=False,enabled=False,maxResults=-1,startAt=0,packageUUIDs=False,childCount=False,hosts=False,saveTo=False,availableOfflineCount=False,availableOnlineCount=False,availableTempUnknownCount=False,availableUnknownCount=False):
-    #     """
-    #     Get the links in the downloadlist
-        
-    #     """
-    #     params='{'
-    #     if (bytesTotal):
-    #         params+='\\"bytesTotal\\" : \\"'+str(bytesTotal).lower()+'\\",'
-    #     if (comment):
-    #         params+='\\"comment\\" : \\"'+str(comment).lower()+'\\",'
-    #     if (status):
-    #         params+='\\"status\\" : \\"'+str(extractPassword).lower()+'\\",'
-    #     if (enabled):
-    #         params+='\\"enabled\\" : \\"'+str(enabled).lower()+'\\",'
-    #     params+='\\"maxResults\\" : \\"'+str(maxResults)+'\\",'
-    #     params+='\\"startAT\\" : \\"'+str(startAt)+'\\",'
-    #     if (packageUUIDs):
-    #         params+='\\"packageUUIDs\\" : \\"'+packageUUIDs+'\\",'
-    #     if (hosts):
-    #         params+='\\"hosts\\" : \\"'+str(hosts).lower()+'\\",'
-    #     if (saveTo):
-    #         params+='\\"saveTo\\" : \\"'+str(saveTo).lower()+'\\",'
-    #     if (availableOfflineCount):
-    #         params+='\\"availableOfflineCount\\" : \\"'+str(availableOfflineCount).lower()+'\\",'
-    #     if (availableOnlineCount):
-    #         params+='\\"availableOnlineCount\\" : \\"'+str(availableOnlineCount).lower()+'\\",'
-    #     if (availableTempUnknownCount):
-    #         params+='\\"availableTempUnknownCount\\" : \\"'+str(availableTempUnknownCount).lower()+'\\",'
-    #     if (availableUnknownCount):
-    #         params+='\\"availableUnknownCount\\" : \\"'+str(availableUnknownCount).lower()+'\\",'
-    #     params=params[:-1]+"}"
-    #     actionurl=self.__actionUrl()
-    #     if not actionurl:
-    #         return False
-    #     text=self.jd.call(actionurl,"POST",rid=False,postparams=[params],action="/downloadsV2/queryPackages")
-    #     if not text:
-    #         return False
-    #     print(text)
-    #     self.jd.updateRid()
-
+    
     def __actionUrl(self):
         if not self.jd.sessiontoken:
             return False
@@ -549,7 +461,7 @@ class myjdapi:
         iv=secretServer[:len(secretServer)//2]        
         key=secretServer[len(secretServer)//2:]
         decryptor = AES.new(key,AES.MODE_CBC,iv)
-        decrypted_data = unpad(decryptor.decrypt(base64.b64decode(data)))
+        decrypted_data = UNPAD(decryptor.decrypt(base64.b64decode(data)))
         return decrypted_data
 
     def __encrypt(self,secretServer,data):
@@ -560,7 +472,7 @@ class myjdapi:
         :param data:
 
         """
-        data=pad(data.encode('utf-8'))
+        data=PAD(data.encode('utf-8'))
         iv=secretServer[:len(secretServer)//2]        
         key=secretServer[len(secretServer)//2:]
         encryptor = AES.new(key,AES.MODE_CBC,iv)
@@ -686,9 +598,9 @@ class myjdapi:
                 call=url
                 for index,param in enumerate(params):
                     if index==0:
-                        call+="?"+param[0]+"="+urllib.parse.quote(param[1])
+                        call+="?"+param[0]+"="+quote(param[1])
                     else:
-                        call+="&"+param[0]+"="+urllib.parse.quote(param[1])
+                        call+="&"+param[0]+"="+quote(param[1])
                         # Todo : Add an exception if the param is loginSecret so it doesn't get url encoded.
                 if rid:
                     call+="&rid="+str(self.rid)
@@ -706,9 +618,9 @@ class myjdapi:
                 
                 for index,param in enumerate(params):
                     if index==0:
-                        call+="?"+param[0]+"="+urllib.parse.quote(param[1])
+                        call+="?"+param[0]+"="+quote(param[1])
                     else:
-                        call+="&"+param[0]+"="+urllib.parse.quote(param[1])
+                        call+="&"+param[0]+"="+quote(param[1])
                         # Todo : Add an exception if the param is loginSecret so it doesn't get url encoded.
                 if rid:
                     call+="&rid="+str(self.rid)
