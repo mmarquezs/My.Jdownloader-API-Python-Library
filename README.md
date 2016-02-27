@@ -1,5 +1,8 @@
 # My.Jdownloader-API-Python-Library
-My.Jdownloader API Python Library
+
+**INFO: I'm working on a new version on the 'developer' branch. It will change functions names and other things. So if you want to use this library  you might want to check that branch first, especially if you want to use python 2.7 since that branch supports it.**
+**Also the API specifications provided by JDownloader Team have been improved and probably a lot of the functions I will be available to do them now with more information.**
+**Finally, I will try to put it on pipy so you can easily install it using 'pip'.**
 
 This a module for Python 3 to interact with My.Jdownloader. This is in a WIP project.You're free to use it following the MIT license and any collaboration is appreciated.
 
