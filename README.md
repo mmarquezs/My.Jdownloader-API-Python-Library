@@ -1,6 +1,6 @@
 # My.Jdownloader-API-Python-Library
 
-**INFO: I'm working on a new version on the 'developer' branch. It will change functions names and other things. So if you want to use this library  you might want to check that branch first, especially if you want to use python 2.7 since that branch supports it.**
+**INFO: I'm working on a new version on the 'develop' branch. It will change functions names and other things. So if you want to use this library  you might want to check that branch first, especially if you want to use python 2.7 since that branch supports it.**
 **Also the API specifications provided by JDownloader Team have been improved and probably a lot of the functions I will be available to do them now with more information.**
 **Finally, I will try to put it on pipy so you can easily install it using 'pip'.**
 
@@ -22,7 +22,7 @@ import myjdapi
 jd=myjdapi.myjdapi()
 jd.connect("example@example.com","password")
 jd.getDevices()
-jd.getDevice(name="DeviceName").linkgrabber.addLinks([{"autostart" : False, "links" : "https://mega.nz/#!xxxxxxxxxxxxxxxxxxxxxxxxxxxx,http://mediafire.com/download/xxxxxxxxxxxxxxxx/","packageName" : TEST" }])
+jd.getDevice(name="DeviceName").linkgrabber.addLinks([{"autostart" : False, "links" : "https://mega.nz/#!xxxxxxxxxxxxxxxxxxxxxxxxxxxx,http://mediafire.com/download/xxxxxxxxxxxxxxxx/","packageName" : "TEST" }])
 
 ```
 
