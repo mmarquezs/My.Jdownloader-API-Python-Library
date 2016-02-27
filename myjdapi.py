@@ -14,6 +14,9 @@ import requests
 from Crypto.Cipher import AES
 BS = 16
 
+class MYJDException(BaseException):
+    pass
+
 def PAD(s):
     try:
         return s + ((BS - len(s) % BS) * chr(BS - len(s) % BS)).encode()
@@ -26,7 +29,7 @@ def UNPAD(s):
     except:                     # For python 2
         return s[0:-ord(s[-1])]
 
-class linkgrabber:
+class Linkgrabber:
     """
     Class that represents the linkgrabber of a Device
     """
@@ -47,8 +50,7 @@ class linkgrabber:
         :rtype:
 
         """
-        resp = self.device.action(self.url+"/setEnabled", postparams=params)
-        self.device.jd.updateRid()
+        resp = self.device.action(self.url+"/setEnabled", params)
         return resp
 
     def get_variants(self, params):
@@ -64,11 +66,10 @@ class linkgrabber:
         'M4A_256', 'name': '256kbit/s M4A-Audio'}, {'id': 'AAC_256', 'name':
         '256kbit/s AAC-Audio'},.......]
         """
-        resp = self.device.action(self.url+"/getVariants", postparams=params)
-        self.device.jd.updateRid()
+        resp = self.device.action(self.url+"/getVariants", params)
         return resp
 
-    def query_links(self, params=(
+    def query_links(self, params=[
             {
                 "bytesTotal"    : True,
                 "comment"       : True,
@@ -84,7 +85,7 @@ class linkgrabber:
                 "variantID"     : True,
                 "variants"      : True,
                 "priority"      : True
-            })):
+            }]):
         """
 
         Get the links in the linkcollector/linkgrabber
@@ -136,8 +137,7 @@ class linkgrabber:
         'variants': True},
         .....]
         """
-        resp = self.device.action(self.url+"/queryLinks", postparams=params)
-        self.device.jd.updateRid()
+        resp = self.device.action(self.url+"/queryLinks", params)
         return resp
 
     def moveto_downloadlist(self, params):
@@ -145,19 +145,18 @@ class linkgrabber:
         No idea what parameters i have to pass and/or i don't know what it does.
         If i find out i will implement it :P
         """
-        resp = self.device.action(self.url+"/moveToDownloadlist", postparams=params)
-        self.device.jd.updateRid()
+        resp = self.device.action(self.url+"/moveToDownloadlist", params)
         return resp
 
     def add_links(self, params=[
             {
                 "autostart" : False,
-                "links" : "",
-                "packageName" : "",
-                "extractPassword" : "",
+                "links" : None,
+                "packageName" : None,
+                "extractPassword" : None,
                 "priority" : "DEFAULT",
-                "downloadPassword" : "",
-                "destinationFolder" : ""
+                "downloadPassword" : None,
+                "destinationFolder" : None
             }]):
         """
         Add links to the linkcollector
@@ -172,8 +171,7 @@ class linkgrabber:
         "destinationFolder" : null
         }
         """
-        resp = self.device.action("/linkgrabberv2/addLinks",postparams=params)
-        self.device.jd.updateRid()
+        resp = self.device.action("/linkgrabberv2/addLinks", params)
         return resp
 
     def add_container(self):
@@ -216,7 +214,6 @@ class linkgrabber:
         It returns the API help.
         """
         resp = self.device.action("/linkgrabberv2/help", "GET")
-        self.device.jd.updateRid()
         return resp
 
     def rename_link(self):
@@ -275,7 +272,7 @@ class linkgrabber:
         """
         pass
 
-class downloads:
+class Downloads:
     """
     Class that represents the downloads list of a Device
     """
@@ -306,11 +303,10 @@ class downloads:
         """
         Get the links in the download list
         """
-        resp = self.device.action(self.url+"/queryLinks",postparams=params)
-        self.device.myjd.updateRid()
+        resp = self.device.action(self.url+"/queryLinks", params)
         return resp
 
-class jddevice:
+class Jddevice:
     """
     Class that represents a JDownloader device and it's functions
     """
@@ -324,10 +320,12 @@ class jddevice:
         self.device_id = device_dict["id"]
         self.device_type = device_dict["type"]
         self.myjd = jd
-        self.linkgrabber = linkgrabber(self)
-        self.downloads = downloads(self)
+        self.linkgrabber = Linkgrabber(self)
+        self.downloads = Downloads(self)
 
-    def action(self, action = False, params = False, postparams = False):
+
+
+    def action(self, path, params = None):
         """Execute any action in the device using the postparams and params.
         All the info of which params are required and what are they default value, type,etc
         can be found in the MY.Jdownloader API Specifications ( https://goo.gl/pkJ9d1 ).
@@ -335,64 +333,23 @@ class jddevice:
         :param params: Params in the url, in a list of tuples. Example:
         /example?param1=ex&param2=ex2 [("param1","ex"),("param2","ex2")]
         :param postparams: List of Params that are send in the post.
-
         """
-        if not action:
+        http_action = "POST"
+        action_url = self.__action_url()
+        response = self.myjd.request_api(path, http_action, params, action_url)
+        if response is None:
             return False
-        httpaction = "POST"
-        actionurl = self.__actionUrl()
-        if not actionurl:
-            return False
-        if postparams:
-            post = []
-            for postparam in postparams:
-                if isinstance(postparam, dict):
-                    keys = list(postparam.keys())
-                    data = "{"
-                    for param in keys:
-                        if isinstance(param, bool):
-                            data += '\\"'+param+'\\" : '+str(postparam[param]).lower()+','
-                        elif isinstance(param, str):
-                            data += '\\"'+param+'\\" : \\"'+postparam[param]+'\\",'
-                        else:
-                            data += '\\"'+param+'\\" : '+str(postparam[param])+','
-                    data = data[:-1]+"}"
-                    post += [data]
-                else:
-                    data = []
-                    if isinstance(postparam, bool):
-                        data = [str(postparam).lower()]
-                    elif isinstance(postparam, int):
-                        data = ['\\"'+str(postparam)+'\\"']
-                    elif isinstance(postparam, list):
-                        data = ['\\"'+str(postparam)+'\\"']
-                    else:
-                        data = postparam
-                    post += data
-            if not params:
-                text = self.myjd.call(actionurl, httpaction, rid=False, \
-                postparams=post, action=action)
-            else:
-                text = self.myjd.call(actionurl, httpaction, rid=False, \
-                params=params, postparams=post, action=action)
-        else:
-            text = self.myjd.call(actionurl, httpaction, rid=False, action=action)
-        if not text:
-            return False
-        return text['data']
+        return response['data']
 
     def __action_url(self):
-        if not self.myjd.sessiontoken:
-            return False
-        return "/t_"+self.myjd.sessiontoken+"_"+self.device_id
+        return "/t_"+self.myjd.get_session_token()+"_"+self.device_id
 
-
-class myjdapi:
+class Myjdapi:
     """
     Main class for connecting to JD API.
 
     """
-    def __init__(self, email=None, password=None, session_token=None, regain_token=None):
+    def __init__(self):
         """
         This functions initializates the myjdapi object.
         If email and password are given it will also try to connect
@@ -405,20 +362,32 @@ class myjdapi:
         :param email: My.Jdownloader User email
         :param password: My.Jdownloader User password
         """
+        self.__request_id = int(time.time()*1000)
+        self.__api_url = "http://api.jdownloader.org"
+        self.__app_key = "http://git.io/vmcsk"
+        self.__api_version = 1
+        self.__devices = None
+        self.__login_secret = None
+        self.__device_secret = None
+        self.__session_token = None
+        self.__regain_token = None
+        self.__server_encryption_token = None
+        self.__device_encryption_token = None
+        self.__connected = False
+    def get_session_token(self):
+        return self.__session_token
 
-        self.request_id = int(time.time()*1000)
-        self.api_url = "http://api.jdownloader.org"
-        self.app_key = "http://git.io/vmcsk"
-        self.app_version = 1
-        self.__devices = []
-        self.login_secret = None
-        self.device_secret = None
-        self.session_token = session_token
-        self.regain_token = regain_token
-        self.server_encryption_token = None
-        self.device_encryption_token = None
-        self.email = email
-        self.password = password
+    def is_connected(self):
+        """
+        Indicates if there is a connection established.
+        """
+        return self.__connected
+
+    def set_app_key(self, app_key):
+        """
+        Sets the APP Key.
+        """
+        self.__app_key = app_key
 
     def __secret_create(self, email, password, domain):
         """
@@ -440,16 +409,16 @@ class myjdapi:
         Updates the server_encryption_token and device_encryption_token
 
         """
-        if self.server_encryption_token is None:
-            old_token = self.login_secret
+        if self.__server_encryption_token is None:
+            old_token = self.__login_secret
         else:
-            old_token = self.server_encryption_token
+            old_token = self.__server_encryption_token
         new_token = hashlib.sha256()
-        new_token.update(old_token + bytearray.fromhex(self.session_token))
-        self.server_encryption_token = new_token.digest()
+        new_token.update(old_token + bytearray.fromhex(self.__session_token))
+        self.__server_encryption_token = new_token.digest()
         new_token = hashlib.sha256()
-        new_token.update(self.device_secret+bytearray.fromhex(self.session_token))
-        self.device_encryption_token = new_token.digest()
+        new_token.update(self.__device_secret+bytearray.fromhex(self.__session_token))
+        self.__device_encryption_token = new_token.digest()
 
     def __signature_create(self,key,data):
         """
@@ -493,7 +462,7 @@ class myjdapi:
         """
         Updates Request_Id
         """
-        self.request_id = int(time.time())
+        self.__request_id = int(time.time())
 
     def connect(self, email, password):
         """Establish connection to api
@@ -503,18 +472,15 @@ class myjdapi:
         :returns: boolean -- True if succesful, False if there was any error.
 
         """
-        self.login_secret = self.__secret_create(email, password, "server")
-        self.device_secret = self.__secret_create(email, password, "device")
-        response = self.call("/my/connect", "GET", request_id=True, \
-                             params=[("email", email), ("appkey", self.app_key)])
-        if response is None:
-            return False
+        self.__login_secret = self.__secret_create(email, password, "server")
+        self.__device_secret = self.__secret_create(email, password, "device")
+        response = self.request_api("/my/connect", "GET",[("email", email), ("appkey", self.__app_key)])
+        self.__connected = True
         self.update_request_id()
-        self.session_token = response["session_token"]
-        self.regain_token = response["regain_token"]
+        self.__session_token = response["sessiontoken"]
+        self.__regain_token = response["regaintoken"]
         self.__update_encryption_tokens()
         self.update_devices()
-        return True
 
     def reconnect(self):
         """
@@ -523,18 +489,11 @@ class myjdapi:
         :returns: boolean -- True if successful, False if there was any error.
 
         """
-        if not self.session_token:
-            return False
-        response = self.call("/my/reconnect", "GET", request_id=True, \
-                             params=[("session_token", self.session_token), \
-                                     ("regain_token", self.regain_token)])
-        if response is None:
-            return False
+        response = self.request_api("/my/reconnect", "GET",[("sessiontoken", self.__session_token), ("regaintoken", self.__regain_token)])
         self.update_request_id()
-        self.session_token = response["session_token"]
-        self.regain_token = response["regain_token"]
+        self.__session_token = response["sessiontoken"]
+        self.__regain_token = response["regaintoken"]
         self.__update_encryption_tokens()
-        return True
 
     def disconnect(self):
         """
@@ -543,20 +502,16 @@ class myjdapi:
         :returns: boolean -- True if successful, False if there was any error.
 
         """
-        if not self.session_token:
-            return False
-        response = self.call("/my/disconnect", "GET", request_id=True, \
-                             params=[("session_token", self.session_token)])
-        if response is None:
-            return False
+        response = self.request_api("/my/disconnect", "GET", [("sessiontoken", self.__session_token)])
         self.update_request_id()
-        self.login_secret = None
-        self.device_secret = None
-        self.session_token = None
-        self.regain_token = None
-        self.server_encryption_token = None
-        self.device_encryption_token = None
-        return True
+        self.__login_secret = None
+        self.__device_secret = None
+        self.__session_token = None
+        self.__regain_token = None
+        self.__server_encryption_token = None
+        self.__device_encryption_token = None
+        self.__devices = None
+        self.__connected = False
 
     def update_devices(self):
         """
@@ -564,15 +519,9 @@ class myjdapi:
 
         :returns: boolean -- True if successful, False if there was any error.
         """
-        if self.session_token is None:
-            return False
-        response = self.call("/my/listdevices", "GET", request_id=True, \
-                             params=[("session_token", self.session_token)])
-        if response is None:
-            return False
+        response = self.request_api("/my/listdevices", "GET",[("sessiontoken",self.__session_token)])
         self.update_request_id()
         self.__devices = response["list"]
-        return True
 
     def list_devices(self):
         """
@@ -589,115 +538,78 @@ class myjdapi:
         """
         return self.__devices
 
-    def get_device(self, device_id=None, device_name=None):
+    def get_device(self, device_name=None, device_id=None):
         """
         Returns a jddevice instance of the device
 
         :param deviceid:
         """
-
         if device_id is not None:
             for device in self.__devices:
                 if device["id"] == device_id:
-                    return jddevice(self, device)
+                    return Jddevice(self, device)
         elif device_name is not None:
             for device in self.__devices:
                 if device["name"] == device_name:
-                    return jddevice(self, device)
-        return False
+                    return Jddevice(self, device)
+        raise(MYJDException("Device not found\n"))
 
-    def call(self,url,httpaction="GET",request_id=True,params=False,postparams=False,action=False):
-        if not action:
-            if (params):
-                call=url
-                for index,param in enumerate(params):
-                    if index==0:
-                        call+="?"+param[0]+"="+quote(param[1])
-                    else:
-                        call+="&"+param[0]+"="+quote(param[1])
-                        # Todo : Add an exception if the param is login_secret so it doesn't get url encoded.
-                if request_id:
-                    call+="&request_id="+str(self.request_id)
-                if not self.server_encryption_token:
-                    call+="&signature="+str(self.__signaturecreate(self.login_secret,call))
+    def request_api(self, path, http_method="GET",params=None, action=None):
+        """
+        Makes a request to the API to the 'path' using the 'http_method' with parameters,'params', and optionally 'post_params'.
+        Ex:
+        http_method=GET
+        params={"test":"test"}
+        post_params={"test2":"test2"}
+        action=True
+        This would make a request to "http://api.jdownloader.org/"
+        """
+        if not self.is_connected() and path != "/my/connect":
+            raise(MYJDException("No connection established\n"))
+        if http_method == "GET":
+            query = [path + "?"]
+            for param in params:
+                if param[0] != "encryptedLoginSecret":
+                    query += ["%s=%s" % (param[0], quote(param[1]))]
                 else:
-                    call+="&signature="+str(self.__signaturecreate(self.server_encryption_token,call))
-            if (postparams):
-                pass
+                    query += ["&%s=%s" % (param[0], param[1])]
+            query += ["rid="+str(self.__request_id)]
+            if self.__server_encryption_token is None:
+                query += ["signature=" + \
+                          str(self.__signature_create(self.__login_secret, query[0]+"&".join(query[1:])))]
+            else:
+                query += ["signature=" + \
+                          str(self.__signature_create(self.__server_encryption_token, query[0]+"&".join(query[1:])))]
+            query = query[0]+"&".join(query[1:])
+            encrypted_response = requests.get(self.__api_url+query)
         else:
-            call=url+action
-            if (params):
-                for index,param in enumerate(params):
-                    if index==0:
-                        call+="?"+param[0]+"="+quote(param[1])
-                    else:
-                        call+="&"+param[0]+"="+quote(param[1])
-                        # Todo : Add an exception if the param is login_secret so it doesn't get url encoded.
-                if request_id:
-                    call+="&request_id="+str(self.request_id)
-                if not self.server_encryption_token:
-                    call+="&signature="+str(self.__signaturecreate(self.login_secret,call))
-                else:
-                    call+="&signature="+str(self.__signaturecreate(self.server_encryption_token,call))
-            if (postparams):
-                data='{"url":"'+action+'","params":["'
-                for index,param in enumerate(postparams):
-                    if index != len(postparams)-1:
-                        data+=param+'","'
-                    else:
-                        data+=param+'"],'
+            params = [str(param).replace("'",'\"').replace("True","true").replace("False","false") for param in params]
+            params = {"apiVer": self.__api_version, "url" : path, "params":params, "rid":self.__request_id}
+            data = json.dumps(params)
+            encrypted_data = self.__encrypt(self.__device_encryption_token,data)
+            if action is not None:
+                request_url=self.__api_url+action+path
             else:
-                data='{"url":"'+action+'",'
-            data+='"request_id":'+str(self.request_id)+',"apiVer":1}'
-            print(data)
-            encrypteddata=self.__encrypt(self.device_encryption_token,data);
-
-        url=self.api_url+call
-        print(url)
-        if httpaction=="GET":
-            encryptedresp=requests.get(url)
-        elif httpaction=="POST":
-            encryptedresp=requests.post(url,headers={"Content-Type": "application/aesjson-jd; charset=utf-8"},data=encrypteddata)
-        if encryptedresp.status_code != 200:
-            return False
-        if not action:
-            if not self.server_encryption_token:
-                response=self.__decrypt(self.login_secret,encryptedresp.text) 
+                request_url=self.__api_url+path
+            encrypted_response = requests.post(request_url,headers={"Content-Type": "application/aesjson-jd; charset=utf-8"},data=encrypted_data)
+        if encrypted_response.status_code != 200:
+            error_msg=json.loads(encrypted_response.text)
+            raise(MYJDException("\n\tSOURCE: "+error_msg["src"]+"\n\tTYPE: "+ \
+                                error_msg["type"]+"\n------\nREQUEST_URL: "+ \
+                                request_url+"\nDATA:\n"+data))
+        if action is None:
+            if not self.__server_encryption_token:
+                response = self.__decrypt(self.__login_secret, encrypted_response.text)
             else:
-                response=self.__decrypt(self.server_encryption_token,encryptedresp.text)
+                response = self.__decrypt(self.__server_encryption_token, encrypted_response.text)
         else:
-            if (params or postparams):
-                response=self.__decrypt(self.device_encryption_token,encryptedresp.text)
+            if params is not None:
+                response = self.__decrypt(self.__device_encryption_token, encrypted_response.text)
             else:
-                response=encryptedresp.text
                 return {"data" : response}
-        jsondata=json.loads(response.decode('utf-8'))
-        if jsondata['request_id']!=self.request_id:
-            return False
+        jsondata = json.loads(response.decode('utf-8'))
+        if jsondata['rid'] != self.__request_id:
+            self.update_request_id()
+            return None
+        self.update_request_id()
         return jsondata
-
-    # Do I really need this? I need to do getters and setters?¿
-    # It isn't easier to simply use object.session_token ?¿
-
-    
-    def getSession_Token():
-        """
-        Returns the Session_Token, useful for apps so the user doesn't have to authenticate each time."
-        """
-        return self.session_token
-    def getRegain_Token():
-        """
-        Returns regain_token, token used to reauthenticate if the session_token has expired, useful for apps so the user doesn't have to authenticate each time .
-        """
-        return self.regain_token
-    def setSession_Token(token):
-        """
-        Sets the session_token
-        """
-        self.session_token=token
-    def setRegain_Token(token):
-        """
-        Sets the session_token
-        """
-        
-        self.regain_token=token
