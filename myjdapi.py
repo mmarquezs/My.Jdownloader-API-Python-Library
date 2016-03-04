@@ -17,6 +17,10 @@ BS = 16
 class MYJDException(BaseException):
     pass
 
+class MissingParameters(MYJDException):
+    def __init__:
+        self.msg="ERROR: Missing parameters."
+
 def PAD(s):
     try:
         return s + ((BS - len(s) % BS) * chr(BS - len(s) % BS)).encode()
@@ -37,9 +41,15 @@ class Linkgrabber:
         self.device = device
         self.url = '/linkgrabberv2'
 
-    def set_enabled(self, params):
+    def clear_list(self):
         """
-        NOT WORKING
+        Clears Linkgrabbers list
+        """
+        resp = self.device.action(self.url+"/clearList", http_action="POST")
+        return resp
+
+    def set_enabled(self, ):
+        """
 
         My guess is that it Enables/Disables a download, but i haven't got it working.
 
@@ -140,11 +150,43 @@ class Linkgrabber:
         resp = self.device.action(self.url+"/queryLinks", params)
         return resp
 
+    def cleanup(self, packages=None, links=None, action, mode, selection_type):
+        """
+        Clean packages and/or links of the linkgrabber list.
+
+        :param packages: Packages UUID.
+        :type: list:
+        :param links: Links UUID.
+        :type: list:
+        :param action: Action to be done. Actions: DELETE_ALL, DELETE_DISABLED, DELETE_FAILED, DELETE_FINISHED, DELETE_OFFLINE, DELETE_DUPE, DELETE_MODE
+        :type: str:
+        :param mode: Mode to use. Modes: REMOVE_LINKS_AND_DELETE_FILES, REMOVE_LINKS_AND_RECYCLE_FILES, REMOVE_LINKS_ONLY
+        :T
+        """
+        params = []
+        if packages is None and links is None :
+            raise(MissingParameters())
+        elif packages is not None and links is not None:
+            params += [packages,links]
+        elif packages is None :
+            params += [links]
+        elif links is None :
+            params += [packages]
+        resp = self.device.action(self.url+"/cleanup", params)
+        return resp
+
     def moveto_downloadlist(self, params):
         """
-        No idea what parameters i have to pass and/or i don't know what it does.
-        If i find out i will implement it :P
+        Moves packages and/or links to download list.
+
+        :param params List of one or two sublists.Where the first sublist is for
+        Link UUID and the second for package UUID.
+        :type: List. Ex: [[45466746]], this moves the link with UUID 45466746 to
+        the download list. [[],[23678]] This one moves the package with UUID
+        23678 with all the links inside it to the download list. And this other
+        does both things at once: [[45466746],[23678]].
         """
+
         resp = self.device.action(self.url+"/moveToDownloadlist", params)
         return resp
 
@@ -213,7 +255,7 @@ class Linkgrabber:
         """
         It returns the API help.
         """
-        resp = self.device.action("/linkgrabberv2/help", "GET")
+        resp = self.device.action("/linkgrabberv2/help",http_action="GET")
         return resp
 
     def rename_link(self):
@@ -325,7 +367,7 @@ class Jddevice:
 
 
 
-    def action(self, path, params = None):
+    def action(self, path, params=(), http_action="POST"):
         """Execute any action in the device using the postparams and params.
         All the info of which params are required and what are they default value, type,etc
         can be found in the MY.Jdownloader API Specifications ( https://goo.gl/pkJ9d1 ).
@@ -334,7 +376,6 @@ class Jddevice:
         /example?param1=ex&param2=ex2 [("param1","ex"),("param2","ex2")]
         :param postparams: List of Params that are send in the post.
         """
-        http_action = "POST"
         action_url = self.__action_url()
         response = self.myjd.request_api(path, http_action, params, action_url)
         if response is None:
@@ -449,7 +490,6 @@ class Myjdapi:
 
         :param secret_token:
         :param data:
-
         """
         data = PAD(data.encode('utf-8'))
         init_vector = secret_token[:len(secret_token)//2]
@@ -564,6 +604,7 @@ class Myjdapi:
         action=True
         This would make a request to "http://api.jdownloader.org/"
         """
+        data = None
         if not self.is_connected() and path != "/my/connect":
             raise(MYJDException("No connection established\n"))
         if http_method == "GET":
@@ -594,9 +635,12 @@ class Myjdapi:
             encrypted_response = requests.post(request_url,headers={"Content-Type": "application/aesjson-jd; charset=utf-8"},data=encrypted_data)
         if encrypted_response.status_code != 200:
             error_msg=json.loads(encrypted_response.text)
-            raise(MYJDException("\n\tSOURCE: "+error_msg["src"]+"\n\tTYPE: "+ \
+            msg="\n\tSOURCE: "+error_msg["src"]+"\n\tTYPE: "+ \
                                 error_msg["type"]+"\n------\nREQUEST_URL: "+ \
-                                request_url+"\nDATA:\n"+data))
+                                self.__api_url+query+"\n"
+            if data is not None:
+                msg+="DATA:\n"+data
+            raise(MYJDException(msg))
         if action is None:
             if not self.__server_encryption_token:
                 response = self.__decrypt(self.__login_secret, encrypted_response.text)
