@@ -45,22 +45,15 @@ class Linkgrabber:
         resp = self.device.action(self.url+"/clearList", http_action="POST")
         return resp
 
-    def move_to_downloadlist(self, links_ids=None, packages_ids=None  ):
+    def move_to_downloadlist(self, links_ids, packages_ids):
         """
         Moves packages and/or links to download list.
-        Requires at least a packages or links list, or both.
 
         :param packages: Packages UUID.
         :type: list of strings.
         :param links: Links UUID.
         """
-        params = []
-        if packages_ids is not None and links_ids is not None:
-            params += [links_ids,packages_ids]
-        elif packages_ids is None :
-            params += [links_ids,[]]
-        elif links_ids is None :
-            params += [[],packages_ids]
+        params = [links_ids,packages_ids]
         resp = self.device.action(self.url+"/moveToDownloadlist", params)
         return resp
 
@@ -125,7 +118,7 @@ class Linkgrabber:
         resp = self.device.action(self.url+"/queryLinks", params)
         return resp
 
-    def cleanup(self, action, mode, selection_type, packages_ids=None, links_ids=None, ):
+    def cleanup(self, packages_ids=None, links_ids=None, action, mode, selection_type ):
         """
         Clean packages and/or links of the linkgrabber list.
         Requires at least a packages_ids or links_ids list, or both.
@@ -141,24 +134,39 @@ class Linkgrabber:
         :param selection_type: Type of selection to use. Types: SELECTED, UNSELECTED, ALL, NONE
         :type: str:
         """
-        params = []
-        if packages_ids is not None and links_ids is not None:
-            params += [packages_ids, links_ids]
-        elif packages_ids is None :
-            params += [links_ids, []]
-        elif links_ids is None :
-            params += [[], packages_ids]
-        else:
-            params+=[[],[]]
-        params+=[action,mode,selection_type]
+        params = [packages_ids, links_ids]
+        params += [action,mode,selection_type]
         resp = self.device.action(self.url+"/cleanup", params)
         return resp
 
-    def add_container(self, type_=None, content=None):
+    def add_container(self, type_, content):
         """
         Adds a container to Linkgrabber.
+
+        :param type_: Type of container.
+        :type: string.
+        :param content: The container.
+        :type: string.
+
         """
-        pass
+        params = [type_, content]
+        resp = self.device.action(self.url+"/addContainer", params)
+        return resp
+
+    def get_download_urls(self, links_ids, packages_ids, url_display_type):
+        """
+        Adds a container to Linkgrabber.
+
+        :param packages_ids: Packages UUID.
+        :type: List of strings.
+        :param Links_ids: Links UUID.
+        :type: List of strings
+        :param url_display_type: No clue. Not documented
+        :type: Dictionary
+        """
+        params = [packages_ids, links_ids, url_display_type]
+        resp = self.device.action(self.url+"/getDownloadUrls", params)
+        return resp
 
     def set_enabled(self, ):
         """
