@@ -191,31 +191,6 @@ class Linkgrabber:
         resp = self.device.action(self.url+"/getVariants", params)
         return resp
 
-    def cleanup(self, packages=None, links=None, action, mode, selection_type):
-        """
-        Clean packages and/or links of the linkgrabber list.
-
-        :param packages: Packages UUID.
-        :type: list:
-        :param links: Links UUID.
-        :type: list:
-        :param action: Action to be done. Actions: DELETE_ALL, DELETE_DISABLED, DELETE_FAILED, DELETE_FINISHED, DELETE_OFFLINE, DELETE_DUPE, DELETE_MODE
-        :type: str:
-        :param mode: Mode to use. Modes: REMOVE_LINKS_AND_DELETE_FILES, REMOVE_LINKS_AND_RECYCLE_FILES, REMOVE_LINKS_ONLY
-        :T
-        """
-        params = []
-        if packages is None and links is None :
-            raise(MissingParameters())
-        elif packages is not None and links is not None:
-            params += [packages,links]
-        elif packages is None :
-            params += [links]
-        elif links is None :
-            params += [packages]
-        resp = self.device.action(self.url+"/cleanup", params)
-        return resp
-
     def add_links(self, params=[
             {
                 "autostart" : False,
