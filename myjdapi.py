@@ -216,21 +216,6 @@ class Linkgrabber:
         resp = self.device.action(self.url+"/cleanup", params)
         return resp
 
-    def moveto_downloadlist(self, params):
-        """
-        Moves packages and/or links to download list.
-
-        :param params List of one or two sublists.Where the first sublist is for
-        Link UUID and the second for package UUID.
-        :type: List. Ex: [[45466746]], this moves the link with UUID 45466746 to
-        the download list. [[],[23678]] This one moves the package with UUID
-        23678 with all the links inside it to the download list. And this other
-        does both things at once: [[45466746],[23678]].
-        """
-
-        resp = self.device.action(self.url+"/moveToDownloadlist", params)
-        return resp
-
     def add_links(self, params=[
             {
                 "autostart" : False,
@@ -256,13 +241,6 @@ class Linkgrabber:
         """
         resp = self.device.action("/linkgrabberv2/addLinks", params)
         return resp
-
-    def add_container(self):
-        """
-        No idea what parameters i have to pass and/or i don't know what it does.
-        If i find out i will implement it :P
-        """
-        pass
 
     def get_childrenchanged(self):
         """
