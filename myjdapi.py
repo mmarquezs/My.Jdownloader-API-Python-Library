@@ -107,32 +107,88 @@ class Linkgrabber:
         "priority"      : false
         }
         :type: Dictionary
-        :rtype: List of dictionaries of this style:
+        :rtype: List of dictionaries of this style, with more or less detail based on your options.
 
-[   {   'availability': 'ONLINE',
-        'bytesTotal': 68548274,
-        'enabled': True,
-        'name': 'The Rick And Morty Theory - The Original        Morty_ - '
-                'Cartoon Conspiracy (Ep. 74) @ChannelFred (192kbit).m4a',
-        'packageUUID': 1450430888524,
-        'url': 'youtubev2://DEMUX_M4A_192_720P_V4/d1NZf1w2BxQ/',
-        'uuid': 1450430889576,
-        'variant': {   'id': 'DEMUX_M4A_192_720P_V4',
-                       'name': '192kbit/s M4A-Audio'},
-        'variants': True},
-    {   'availability': 'ONLINE',
-        'bytesTotal': 68548274,
-        'enabled': True,
-        'name': 'The Rick And Morty Theory - The Original Morty_ - '
-                'Cartoon        Conspiracy (Ep. 74) @ChannelFred (720p).mp4',
-        'packageUUID': 1450430888524,
-        'url': 'youtubev2://MP4_720/d1NZf1w2BxQ/',
-        'uuid': 1450430889405,
-        'variant': {'id': 'MP4_720', 'name': '720p MP4-Video'},
-        'variants': True},
-        .....]
+        [   {   'availability': 'ONLINE',
+            'bytesTotal': 68548274,
+            'enabled': True,
+            'name': 'The Rick And Morty Theory - The Original        Morty_ - '
+                    'Cartoon Conspiracy (Ep. 74) @ChannelFred (192kbit).m4a',
+            'packageUUID': 1450430888524,
+            'url': 'youtubev2://DEMUX_M4A_192_720P_V4/d1NZf1w2BxQ/',
+            'uuid': 1450430889576,
+            'variant': {   'id': 'DEMUX_M4A_192_720P_V4',
+                        'name': '192kbit/s M4A-Audio'},
+            'variants': True
+            }, ... ]
         """
         resp = self.device.action(self.url+"/queryLinks", params)
+        return resp
+
+    def cleanup(self, action, mode, selection_type, packages_ids=None, links_ids=None, ):
+        """
+        Clean packages and/or links of the linkgrabber list.
+        Requires at least a packages_ids or links_ids list, or both.
+
+        :param packages_ids: Packages UUID.
+        :type: list of strings.
+        :param links_ids: Links UUID.
+        :type: list of strings
+        :param action: Action to be done. Actions: DELETE_ALL, DELETE_DISABLED, DELETE_FAILED, DELETE_FINISHED, DELETE_OFFLINE, DELETE_DUPE, DELETE_MODE
+        :type: str:
+        :param mode: Mode to use. Modes: REMOVE_LINKS_AND_DELETE_FILES, REMOVE_LINKS_AND_RECYCLE_FILES, REMOVE_LINKS_ONLY
+        :type: str:
+        :param selection_type: Type of selection to use. Types: SELECTED, UNSELECTED, ALL, NONE
+        :type: str:
+        """
+        params = []
+        if packages_ids is not None and links_ids is not None:
+            params += [packages_ids, links_ids]
+        elif packages_ids is None :
+            params += [links_ids, []]
+        elif links_ids is None :
+            params += [[], packages_ids]
+        else:
+            params+=[[],[]]
+        params+=[action,mode,selection_type]
+        resp = self.device.action(self.url+"/cleanup", params)
+        return resp
+
+    def add_container(self, type_=None, content=None):
+        """
+        Adds a container to Linkgrabber.
+        """
+        pass
+
+    def set_enabled(self, ):
+        """
+
+        My guess is that it Enables/Disables a download, but i haven't got it working.
+
+        :param params: List with a boolean (enable/disable download), my guess
+        the parameters are package uuid, download uuid. Ex:
+        [False,2453556,2334455].
+        :type: List
+        :rtype:
+
+        """
+        resp = self.device.action(self.url+"/setEnabled", params)
+        return resp
+
+    def get_variants(self, params):
+        """
+        Gets the variants of a url/download (not package), for example a youtube
+        link gives you a package with three downloads, the audio, the video and
+        a picture, and each of those downloads have different variants (audio
+        quality, video quality, and picture quality).
+
+        :param params: List with the UUID of the download you want the variants. Ex: [232434]
+        :type: List
+        :rtype: Variants in a list with dictionaries like this one: [{'id':
+        'M4A_256', 'name': '256kbit/s M4A-Audio'}, {'id': 'AAC_256', 'name':
+        '256kbit/s AAC-Audio'},.......]
+        """
+        resp = self.device.action(self.url+"/getVariants", params)
         return resp
 
     def cleanup(self, packages=None, links=None, action, mode, selection_type):
