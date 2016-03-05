@@ -155,7 +155,7 @@ class Linkgrabber:
 
     def get_download_urls(self, links_ids, packages_ids, url_display_type):
         """
-        Adds a container to Linkgrabber.
+        Gets download urls from Linkgrabber.
 
         :param packages_ids: Packages UUID.
         :type: List of strings.
