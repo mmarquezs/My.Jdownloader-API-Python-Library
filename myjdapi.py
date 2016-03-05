@@ -17,9 +17,6 @@ BS = 16
 class MYJDException(BaseException):
     pass
 
-class MissingParameters(MYJDException):
-    def __init__:
-        self.msg="ERROR: Missing parameters."
 
 def PAD(s):
     try:
