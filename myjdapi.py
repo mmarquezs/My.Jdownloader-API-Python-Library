@@ -45,35 +45,23 @@ class Linkgrabber:
         resp = self.device.action(self.url+"/clearList", http_action="POST")
         return resp
 
-    def set_enabled(self, ):
+    def move_to_downloadlist(self, links_ids=None, packages_ids=None  ):
         """
+        Moves packages and/or links to download list.
+        Requires at least a packages or links list, or both.
 
-        My guess is that it Enables/Disables a download, but i haven't got it working.
-
-        :param params: List with a boolean (enable/disable download), my guess
-        the parameters are package uuid, download uuid. Ex:
-        [False,2453556,2334455].
-        :type: List
-        :rtype:
-
+        :param packages: Packages UUID.
+        :type: list of strings.
+        :param links: Links UUID.
         """
-        resp = self.device.action(self.url+"/setEnabled", params)
-        return resp
-
-    def get_variants(self, params):
-        """
-        Gets the variants of a url/download (not package), for example a youtube
-        link gives you a package with three downloads, the audio, the video and
-        a picture, and each of those downloads have different variants (audio
-        quality, video quality, and picture quality).
-
-        :param params: List with the UUID of the download you want the variants. Ex: [232434]
-        :type: List
-        :rtype: Variants in a list with dictionaries like this one: [{'id':
-        'M4A_256', 'name': '256kbit/s M4A-Audio'}, {'id': 'AAC_256', 'name':
-        '256kbit/s AAC-Audio'},.......]
-        """
-        resp = self.device.action(self.url+"/getVariants", params)
+        params = []
+        if packages_ids is not None and links_ids is not None:
+            params += [links_ids,packages_ids]
+        elif packages_ids is None :
+            params += [links_ids,[]]
+        elif links_ids is None :
+            params += [[],packages_ids]
+        resp = self.device.action(self.url+"/moveToDownloadlist", params)
         return resp
 
     def query_links(self, params=[
