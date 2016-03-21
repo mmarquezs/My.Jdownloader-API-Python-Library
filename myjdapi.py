@@ -639,7 +639,10 @@ class Myjdapi:
             error_msg=json.loads(encrypted_response.text)
             msg="\n\tSOURCE: "+error_msg["src"]+"\n\tTYPE: "+ \
                                 error_msg["type"]+"\n------\nREQUEST_URL: "+ \
-                                self.__api_url+query+"\n"
+                                self.__api_url+path
+            if http_method == "GET":
+                msg+=query
+            msg+="\n"
             if data is not None:
                 msg+="DATA:\n"+data
             raise(MYJDException(msg))
