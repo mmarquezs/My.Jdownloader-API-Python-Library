@@ -118,7 +118,7 @@ class Linkgrabber:
         resp = self.device.action(self.url+"/queryLinks", params)
         return resp
 
-    def cleanup(self, packages_ids=None, links_ids=None, action, mode, selection_type ):
+    def cleanup(self,  action, mode, selection_type, packages_ids=None, links_ids=None ):
         """
         Clean packages and/or links of the linkgrabber list.
         Requires at least a packages_ids or links_ids list, or both.
