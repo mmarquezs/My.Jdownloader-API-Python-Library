@@ -322,28 +322,28 @@ class Downloads:
     """
     def __init__(self, device):
         self.device = device
-        self.url = "/downloadsv2"
+        self.url = "/downloadsV2"
 
-    def query_links(self, params=(
+    def query_links(self, params=[
             {
-                "bytesTotal" : False,
-                "comment" : False,
-                "status" : False,
-                "enabled" : False,
+                "bytesTotal" : True,
+                "comment" : True,
+                "status" : True,
+                "enabled" : True,
                 "maxResults" : -1,
                 "startAt" : 0,
-                "packageUUIDs" : False,
-                "host" : False,
-                "url" : False,
-                "bytesloaded" : False,
-                "speed" : False,
-                "eta" : False,
-                "finished" : False,
-                "priority" : False,
-                "running" : False,
-                "skipped" : False,
-                "extractionStatus" : False
-            })):
+                "packageUUIDs" : [],
+                "host" : True,
+                "url" : True,
+                "bytesloaded" : True,
+                "speed" : True,
+                "eta" : True,
+                "finished" : True,
+                "priority" : True,
+                "running" : True,
+                "skipped" : True,
+                "extractionStatus" : True
+            }]):
         """
         Get the links in the download list
         """
