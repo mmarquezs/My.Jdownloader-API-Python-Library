@@ -586,6 +586,8 @@ class Myjdapi:
 
         :param deviceid:
         """
+        if not self.is_connected() :
+            raise(MYJDException("No connection established\n"))
         if device_id is not None:
             for device in self.__devices:
                 if device["id"] == device_id:
