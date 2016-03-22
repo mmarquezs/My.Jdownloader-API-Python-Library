@@ -207,7 +207,8 @@ class Linkgrabber:
                 "extractPassword" : None,
                 "priority" : "DEFAULT",
                 "downloadPassword" : None,
-                "destinationFolder" : None
+                "destinationFolder" : None,
+                "overwritePackagizerRules" : False
             }]):
         """
         Add links to the linkcollector
