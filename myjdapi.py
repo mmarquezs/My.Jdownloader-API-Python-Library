@@ -365,7 +365,9 @@ class Downloads:
                 "status" : True,
                 "childCount" : True,
                 "hosts" : True,
-                "saveTo" : True
+                "saveTo" : True,
+                "maxResults" : -1,
+                "startAt" : 0,
             }]):
         """
         Get the packages in the download list
