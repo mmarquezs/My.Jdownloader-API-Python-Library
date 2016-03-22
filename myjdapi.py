@@ -389,8 +389,6 @@ class Jddevice:
         self.linkgrabber = Linkgrabber(self)
         self.downloads = Downloads(self)
 
-
-
     def action(self, path, params=(), http_action="POST"):
         """Execute any action in the device using the postparams and params.
         All the info of which params are required and what are they default value, type,etc
@@ -417,15 +415,7 @@ class Myjdapi:
     def __init__(self):
         """
         This functions initializates the myjdapi object.
-        If email and password are given it will also try to connect
-        with that account.
-        If it fails to connect it won't provide any error,
-        you can check if it worked by checking if session_token
-        is not an empty string.
-        TODO: Improve this ^^
 
-        :param email: My.Jdownloader User email
-        :param password: My.Jdownloader User password
         """
         self.__request_id = int(time.time()*1000)
         self.__api_url = "http://api.jdownloader.org"
