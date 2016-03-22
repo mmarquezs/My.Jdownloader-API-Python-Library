@@ -118,7 +118,7 @@ class Linkgrabber:
         resp = self.device.action(self.url+"/queryLinks", params)
         return resp
 
-    def cleanup(self,  action, mode, selection_type, packages_ids=None, links_ids=None ):
+    def cleanup(self,  action, mode, selection_type, links_ids=None, packages_ids=None ):
         """
         Clean packages and/or links of the linkgrabber list.
         Requires at least a packages_ids or links_ids list, or both.
@@ -134,7 +134,7 @@ class Linkgrabber:
         :param selection_type: Type of selection to use. Types: SELECTED, UNSELECTED, ALL, NONE
         :type: str:
         """
-        params = [packages_ids, links_ids]
+        params = [links_ids,packages_ids]
         params += [action,mode,selection_type]
         resp = self.device.action(self.url+"/cleanup", params)
         return resp
@@ -348,6 +348,27 @@ class Downloads:
         Get the links in the download list
         """
         resp = self.device.action(self.url+"/queryLinks", params)
+        return resp
+
+    def cleanup(self,  action, mode, selection_type, links_ids=None, packages_ids=None ):
+        """
+        Clean packages and/or links of the linkgrabber list.
+        Requires at least a packages_ids or links_ids list, or both.
+
+        :param packages_ids: Packages UUID.
+        :type: list of strings.
+        :param links_ids: Links UUID.
+        :type: list of strings
+        :param action: Action to be done. Actions: DELETE_ALL, DELETE_DISABLED, DELETE_FAILED, DELETE_FINISHED, DELETE_OFFLINE, DELETE_DUPE, DELETE_MODE
+        :type: str:
+        :param mode: Mode to use. Modes: REMOVE_LINKS_AND_DELETE_FILES, REMOVE_LINKS_AND_RECYCLE_FILES, REMOVE_LINKS_ONLY
+        :type: str:
+        :param selection_type: Type of selection to use. Types: SELECTED, UNSELECTED, ALL, NONE
+        :type: str:
+        """
+        params = [links_ids,packages_ids]
+        params += [action,mode,selection_type]
+        resp = self.device.action(self.url+"/cleanup", params)
         return resp
 
 class Jddevice:
