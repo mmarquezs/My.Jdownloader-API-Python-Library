@@ -351,6 +351,28 @@ class Downloads:
         resp = self.device.action(self.url+"/queryLinks", params)
         return resp
 
+    def query_packages(self, params=[
+            {
+                "bytesLoaded" : True,
+                "bytesTotal" : True,
+                "comment" : True,
+                "enabled" : True,
+                "eta" : True,
+                "priority" : True,
+                "finished" : True,
+                "running" : True,
+                "speed" : True,
+                "status" : True,
+                "childCount" : True,
+                "hosts" : True,
+                "saveTo" : True
+            }]):
+        """
+        Get the packages in the download list
+        """
+        resp = self.device.action(self.url+"/queryPackages", params)
+        return resp
+
     def cleanup(self,  action, mode, selection_type, links_ids=None, packages_ids=None ):
         """
         Clean packages and/or links of the linkgrabber list.
