@@ -429,6 +429,7 @@ class Myjdapi:
         self.__server_encryption_token = None
         self.__device_encryption_token = None
         self.__connected = False
+
     def get_session_token(self):
         return self.__session_token
 
@@ -612,7 +613,7 @@ class Myjdapi:
 
     def request_api(self, path, http_method="GET",params=None, action=None):
         """
-        Makes a request to the API to the 'path' using the 'http_method' with parameters,'params', and optionally 'post_params'.
+        Makes a request to the API to the 'path' using the 'http_method' with parameters,'params'.
         Ex:
         http_method=GET
         params={"test":"test"}
@@ -640,9 +641,14 @@ class Myjdapi:
             query = query[0]+"&".join(query[1:])
             encrypted_response = requests.get(self.__api_url+query)
         else:
-            params = [str(param).replace("'",'\"').replace("True","true").replace("False","false") for param in params]
-            params = {"apiVer": self.__api_version, "url" : path, "params":params, "rid":self.__request_id}
-            data = json.dumps(params)
+            params_request=[]
+            for param in params:
+                if not isinstance(param,list):
+                    params_request+=[str(param).replace("'",'\"').replace("True","true").replace("False","false")]
+                else:
+                    params_request+=[param]
+            params_request = {"apiVer": self.__api_version, "url" : path, "params":params_request, "rid":self.__request_id}
+            data = json.dumps(params_request)
             encrypted_data = self.__encrypt(self.__device_encryption_token,data)
             if action is not None:
                 request_url=self.__api_url+action+path
