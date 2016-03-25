@@ -668,9 +668,7 @@ class Myjdapi:
             params_request=[]
             for param in params:
                 if not isinstance(param,list):
-                    print param
                     params_request+=[str(param).replace("'",'\"').replace("True","true").replace("False","false").replace('None',"null")]
-                    print(params_request[-1])
                 else:
                     params_request+=[param]
             params_request = {"apiVer": self.__api_version, "url" : path, "params":params_request, "rid":self.__request_id}
