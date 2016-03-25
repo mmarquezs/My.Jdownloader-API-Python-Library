@@ -668,11 +668,13 @@ class Myjdapi:
             params_request=[]
             for param in params:
                 if not isinstance(param,list):
-                    params_request+=[str(param).replace("'",'\"').replace("True","true").replace("False","false")]
+                    print param
+                    params_request+=[str(param).replace("'",'\"').replace("True","true").replace("False","false").replace('None',"null")]
+                    print(params_request[-1])
                 else:
                     params_request+=[param]
             params_request = {"apiVer": self.__api_version, "url" : path, "params":params_request, "rid":self.__request_id}
-            data = json.dumps(params_request)
+            data = json.dumps(params_request).replace('"null"',"null").replace("'null'","null")
             encrypted_data = self.__encrypt(self.__device_encryption_token,data)
             if action is not None:
                 request_url=self.__api_url+action+path
