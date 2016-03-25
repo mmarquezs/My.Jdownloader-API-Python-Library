@@ -55,4 +55,3 @@ docs/_build/
 
 # PyBuilder
 target/
-*.py
