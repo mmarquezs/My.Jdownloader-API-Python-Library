@@ -4,11 +4,11 @@ import hmac
 import json
 import time
 try:
-    from urllib.request import urlopen
+    # from urllib.request import urlopen
     from urllib.parse import quote
 except:                         #For Python 2
     from urllib import quote
-    from urllib import urlopen
+    # from urllib import urlopen
 import base64
 import requests
 from Crypto.Cipher import AES
