@@ -168,6 +168,21 @@ class Linkgrabber:
         resp = self.device.action(self.url+"/getDownloadUrls", params)
         return resp
 
+    def set_priority(self, priority, links_ids, packages_ids ):
+        """
+        Sets the priority of links or packages.
+
+        :param packages_ids: Packages UUID.
+        :type: list of strings.
+        :param links_ids: Links UUID.
+        :type: list of strings
+        :param priority: Priority to set. Priorities: HIGHEST, HIGHER, HIGH, DEFAULT, LOWER;
+        :type: str:
+        """
+        params = [priority, links_ids, packages_ids]
+        resp = self.device.action(self.url+"/setPriority", params)
+        return resp
+
     def set_enabled(self, ):
         """
 
@@ -227,13 +242,6 @@ class Linkgrabber:
         return resp
 
     def get_childrenchanged(self):
-        """
-        no idea what parameters i have to pass and/or i don't know what it does.
-        if i find out i will implement it :p
-        """
-        pass
-
-    def set_priority(self):
         """
         no idea what parameters i have to pass and/or i don't know what it does.
         if i find out i will implement it :p
