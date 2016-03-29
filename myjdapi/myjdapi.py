@@ -4,11 +4,11 @@ import hmac
 import json
 import time
 try:
-    from urllib.request import urlopen
+    # from urllib.request import urlopen
     from urllib.parse import quote
 except:                         #For Python 2
     from urllib import quote
-    from urllib import urlopen
+    # from urllib import urlopen
 import base64
 import requests
 from Crypto.Cipher import AES
@@ -17,9 +17,6 @@ BS = 16
 class MYJDException(BaseException):
     pass
 
-class MissingParameters(MYJDException):
-    def __init__:
-        self.msg="ERROR: Missing parameters."
 
 def PAD(s):
     try:
@@ -48,35 +45,16 @@ class Linkgrabber:
         resp = self.device.action(self.url+"/clearList", http_action="POST")
         return resp
 
-    def set_enabled(self, ):
+    def move_to_downloadlist(self, links_ids, packages_ids):
         """
+        Moves packages and/or links to download list.
 
-        My guess is that it Enables/Disables a download, but i haven't got it working.
-
-        :param params: List with a boolean (enable/disable download), my guess
-        the parameters are package uuid, download uuid. Ex:
-        [False,2453556,2334455].
-        :type: List
-        :rtype:
-
+        :param packages: Packages UUID.
+        :type: list of strings.
+        :param links: Links UUID.
         """
-        resp = self.device.action(self.url+"/setEnabled", params)
-        return resp
-
-    def get_variants(self, params):
-        """
-        Gets the variants of a url/download (not package), for example a youtube
-        link gives you a package with three downloads, the audio, the video and
-        a picture, and each of those downloads have different variants (audio
-        quality, video quality, and picture quality).
-
-        :param params: List with the UUID of the download you want the variants. Ex: [232434]
-        :type: List
-        :rtype: Variants in a list with dictionaries like this one: [{'id':
-        'M4A_256', 'name': '256kbit/s M4A-Audio'}, {'id': 'AAC_256', 'name':
-        '256kbit/s AAC-Audio'},.......]
-        """
-        resp = self.device.action(self.url+"/getVariants", params)
+        params = [links_ids,packages_ids]
+        resp = self.device.action(self.url+"/moveToDownloadlist", params)
         return resp
 
     def query_links(self, params=[
@@ -122,72 +100,103 @@ class Linkgrabber:
         "priority"      : false
         }
         :type: Dictionary
-        :rtype: List of dictionaries of this style:
+        :rtype: List of dictionaries of this style, with more or less detail based on your options.
 
-[   {   'availability': 'ONLINE',
-        'bytesTotal': 68548274,
-        'enabled': True,
-        'name': 'The Rick And Morty Theory - The Original        Morty_ - '
-                'Cartoon Conspiracy (Ep. 74) @ChannelFred (192kbit).m4a',
-        'packageUUID': 1450430888524,
-        'url': 'youtubev2://DEMUX_M4A_192_720P_V4/d1NZf1w2BxQ/',
-        'uuid': 1450430889576,
-        'variant': {   'id': 'DEMUX_M4A_192_720P_V4',
-                       'name': '192kbit/s M4A-Audio'},
-        'variants': True},
-    {   'availability': 'ONLINE',
-        'bytesTotal': 68548274,
-        'enabled': True,
-        'name': 'The Rick And Morty Theory - The Original Morty_ - '
-                'Cartoon        Conspiracy (Ep. 74) @ChannelFred (720p).mp4',
-        'packageUUID': 1450430888524,
-        'url': 'youtubev2://MP4_720/d1NZf1w2BxQ/',
-        'uuid': 1450430889405,
-        'variant': {'id': 'MP4_720', 'name': '720p MP4-Video'},
-        'variants': True},
-        .....]
+        [   {   'availability': 'ONLINE',
+            'bytesTotal': 68548274,
+            'enabled': True,
+            'name': 'The Rick And Morty Theory - The Original        Morty_ - '
+                    'Cartoon Conspiracy (Ep. 74) @ChannelFred (192kbit).m4a',
+            'packageUUID': 1450430888524,
+            'url': 'youtubev2://DEMUX_M4A_192_720P_V4/d1NZf1w2BxQ/',
+            'uuid': 1450430889576,
+            'variant': {   'id': 'DEMUX_M4A_192_720P_V4',
+                        'name': '192kbit/s M4A-Audio'},
+            'variants': True
+            }, ... ]
         """
         resp = self.device.action(self.url+"/queryLinks", params)
         return resp
 
-    def cleanup(self, packages=None, links=None, action, mode, selection_type):
+    def cleanup(self,  action, mode, selection_type, links_ids=[], packages_ids=[] ):
         """
         Clean packages and/or links of the linkgrabber list.
+        Requires at least a packages_ids or links_ids list, or both.
 
-        :param packages: Packages UUID.
-        :type: list:
-        :param links: Links UUID.
-        :type: list:
+        :param packages_ids: Packages UUID.
+        :type: list of strings.
+        :param links_ids: Links UUID.
+        :type: list of strings
         :param action: Action to be done. Actions: DELETE_ALL, DELETE_DISABLED, DELETE_FAILED, DELETE_FINISHED, DELETE_OFFLINE, DELETE_DUPE, DELETE_MODE
         :type: str:
         :param mode: Mode to use. Modes: REMOVE_LINKS_AND_DELETE_FILES, REMOVE_LINKS_AND_RECYCLE_FILES, REMOVE_LINKS_ONLY
-        :T
+        :type: str:
+        :param selection_type: Type of selection to use. Types: SELECTED, UNSELECTED, ALL, NONE
+        :type: str:
         """
-        params = []
-        if packages is None and links is None :
-            raise(MissingParameters())
-        elif packages is not None and links is not None:
-            params += [packages,links]
-        elif packages is None :
-            params += [links]
-        elif links is None :
-            params += [packages]
+        params = [links_ids,packages_ids]
+        params += [action,mode,selection_type]
         resp = self.device.action(self.url+"/cleanup", params)
         return resp
 
-    def moveto_downloadlist(self, params):
+    def add_container(self, type_, content):
         """
-        Moves packages and/or links to download list.
+        Adds a container to Linkgrabber.
 
-        :param params List of one or two sublists.Where the first sublist is for
-        Link UUID and the second for package UUID.
-        :type: List. Ex: [[45466746]], this moves the link with UUID 45466746 to
-        the download list. [[],[23678]] This one moves the package with UUID
-        23678 with all the links inside it to the download list. And this other
-        does both things at once: [[45466746],[23678]].
+        :param type_: Type of container.
+        :type: string.
+        :param content: The container.
+        :type: string.
+
+        """
+        params = [type_, content]
+        resp = self.device.action(self.url+"/addContainer", params)
+        return resp
+
+    def get_download_urls(self, links_ids, packages_ids, url_display_type):
+        """
+        Gets download urls from Linkgrabber.
+
+        :param packages_ids: Packages UUID.
+        :type: List of strings.
+        :param Links_ids: Links UUID.
+        :type: List of strings
+        :param url_display_type: No clue. Not documented
+        :type: Dictionary
+        """
+        params = [packages_ids, links_ids, url_display_type]
+        resp = self.device.action(self.url+"/getDownloadUrls", params)
+        return resp
+
+    def set_enabled(self, ):
         """
 
-        resp = self.device.action(self.url+"/moveToDownloadlist", params)
+        My guess is that it Enables/Disables a download, but i haven't got it working.
+
+        :param params: List with a boolean (enable/disable download), my guess
+        the parameters are package uuid, download uuid. Ex:
+        [False,2453556,2334455].
+        :type: List
+        :rtype:
+
+        """
+        resp = self.device.action(self.url+"/setEnabled", params)
+        return resp
+
+    def get_variants(self, params):
+        """
+        Gets the variants of a url/download (not package), for example a youtube
+        link gives you a package with three downloads, the audio, the video and
+        a picture, and each of those downloads have different variants (audio
+        quality, video quality, and picture quality).
+
+        :param params: List with the UUID of the download you want the variants. Ex: [232434]
+        :type: List
+        :rtype: Variants in a list with dictionaries like this one: [{'id':
+        'M4A_256', 'name': '256kbit/s M4A-Audio'}, {'id': 'AAC_256', 'name':
+        '256kbit/s AAC-Audio'},.......]
+        """
+        resp = self.device.action(self.url+"/getVariants", params)
         return resp
 
     def add_links(self, params=[
@@ -198,7 +207,8 @@ class Linkgrabber:
                 "extractPassword" : None,
                 "priority" : "DEFAULT",
                 "downloadPassword" : None,
-                "destinationFolder" : None
+                "destinationFolder" : None,
+                "overwritePackagizerRules" : False
             }]):
         """
         Add links to the linkcollector
@@ -215,13 +225,6 @@ class Linkgrabber:
         """
         resp = self.device.action("/linkgrabberv2/addLinks", params)
         return resp
-
-    def add_container(self):
-        """
-        No idea what parameters i have to pass and/or i don't know what it does.
-        If i find out i will implement it :P
-        """
-        pass
 
     def get_childrenchanged(self):
         """
@@ -320,32 +323,77 @@ class Downloads:
     """
     def __init__(self, device):
         self.device = device
-        self.url = "/downloadsv2"
+        self.url = "/downloadsV2"
 
-    def query_links(self, params=(
+    def query_links(self, params=[
             {
-                "bytesTotal" : False,
-                "comment" : False,
-                "status" : False,
-                "enabled" : False,
+                "bytesTotal" : True,
+                "comment" : True,
+                "status" : True,
+                "enabled" : True,
                 "maxResults" : -1,
                 "startAt" : 0,
-                "packageUUIDs" : False,
-                "host" : False,
-                "url" : False,
-                "bytesloaded" : False,
-                "speed" : False,
-                "eta" : False,
-                "finished" : False,
-                "priority" : False,
-                "running" : False,
-                "skipped" : False,
-                "extractionStatus" : False
-            })):
+                "packageUUIDs" : [],
+                "host" : True,
+                "url" : True,
+                "bytesloaded" : True,
+                "speed" : True,
+                "eta" : True,
+                "finished" : True,
+                "priority" : True,
+                "running" : True,
+                "skipped" : True,
+                "extractionStatus" : True
+            }]):
         """
         Get the links in the download list
         """
         resp = self.device.action(self.url+"/queryLinks", params)
+        return resp
+
+    def query_packages(self, params=[
+            {
+                "bytesLoaded" : True,
+                "bytesTotal" : True,
+                "comment" : True,
+                "enabled" : True,
+                "eta" : True,
+                "priority" : True,
+                "finished" : True,
+                "running" : True,
+                "speed" : True,
+                "status" : True,
+                "childCount" : True,
+                "hosts" : True,
+                "saveTo" : True,
+                "maxResults" : -1,
+                "startAt" : 0,
+            }]):
+        """
+        Get the packages in the download list
+        """
+        resp = self.device.action(self.url+"/queryPackages", params)
+        return resp
+
+    def cleanup(self,  action, mode, selection_type, links_ids=[], packages_ids=[] ):
+        """
+        Clean packages and/or links of the linkgrabber list.
+        Requires at least a packages_ids or links_ids list, or both.
+
+        :param packages_ids: Packages UUID.
+        :type: list of strings.
+        :param links_ids: Links UUID.
+        :type: list of strings
+        :param action: Action to be done. Actions: DELETE_ALL, DELETE_DISABLED, DELETE_FAILED, DELETE_FINISHED, DELETE_OFFLINE, DELETE_DUPE, DELETE_MODE
+        :type: str:
+        :param mode: Mode to use. Modes: REMOVE_LINKS_AND_DELETE_FILES, REMOVE_LINKS_AND_RECYCLE_FILES, REMOVE_LINKS_ONLY
+        :type: str:
+        :param selection_type: Type of selection to use. Types: SELECTED, UNSELECTED, ALL, NONE
+        :type: str:
+        """
+        params = [links_ids,packages_ids]
+        params += [action,mode,selection_type]
+        resp = self.device.action(self.url+"/cleanup", params)
         return resp
 
 class Jddevice:
@@ -364,8 +412,6 @@ class Jddevice:
         self.myjd = jd
         self.linkgrabber = Linkgrabber(self)
         self.downloads = Downloads(self)
-
-
 
     def action(self, path, params=(), http_action="POST"):
         """Execute any action in the device using the postparams and params.
@@ -393,15 +439,7 @@ class Myjdapi:
     def __init__(self):
         """
         This functions initializates the myjdapi object.
-        If email and password are given it will also try to connect
-        with that account.
-        If it fails to connect it won't provide any error,
-        you can check if it worked by checking if session_token
-        is not an empty string.
-        TODO: Improve this ^^
 
-        :param email: My.Jdownloader User email
-        :param password: My.Jdownloader User password
         """
         self.__request_id = int(time.time()*1000)
         self.__api_url = "http://api.jdownloader.org"
@@ -415,6 +453,7 @@ class Myjdapi:
         self.__server_encryption_token = None
         self.__device_encryption_token = None
         self.__connected = False
+
     def get_session_token(self):
         return self.__session_token
 
@@ -584,6 +623,8 @@ class Myjdapi:
 
         :param deviceid:
         """
+        if not self.is_connected() :
+            raise(MYJDException("No connection established\n"))
         if device_id is not None:
             for device in self.__devices:
                 if device["id"] == device_id:
@@ -596,7 +637,7 @@ class Myjdapi:
 
     def request_api(self, path, http_method="GET",params=None, action=None):
         """
-        Makes a request to the API to the 'path' using the 'http_method' with parameters,'params', and optionally 'post_params'.
+        Makes a request to the API to the 'path' using the 'http_method' with parameters,'params'.
         Ex:
         http_method=GET
         params={"test":"test"}
@@ -624,9 +665,14 @@ class Myjdapi:
             query = query[0]+"&".join(query[1:])
             encrypted_response = requests.get(self.__api_url+query)
         else:
-            params = [str(param).replace("'",'\"').replace("True","true").replace("False","false") for param in params]
-            params = {"apiVer": self.__api_version, "url" : path, "params":params, "rid":self.__request_id}
-            data = json.dumps(params)
+            params_request=[]
+            for param in params:
+                if not isinstance(param,list):
+                    params_request+=[str(param).replace("'",'\"').replace("True","true").replace("False","false").replace('None',"null")]
+                else:
+                    params_request+=[param]
+            params_request = {"apiVer": self.__api_version, "url" : path, "params":params_request, "rid":self.__request_id}
+            data = json.dumps(params_request).replace('"null"',"null").replace("'null'","null")
             encrypted_data = self.__encrypt(self.__device_encryption_token,data)
             if action is not None:
                 request_url=self.__api_url+action+path
@@ -637,7 +683,10 @@ class Myjdapi:
             error_msg=json.loads(encrypted_response.text)
             msg="\n\tSOURCE: "+error_msg["src"]+"\n\tTYPE: "+ \
                                 error_msg["type"]+"\n------\nREQUEST_URL: "+ \
-                                self.__api_url+query+"\n"
+                                self.__api_url+path
+            if http_method == "GET":
+                msg+=query
+            msg+="\n"
             if data is not None:
                 msg+="DATA:\n"+data
             raise(MYJDException(msg))
