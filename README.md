@@ -6,7 +6,7 @@ This a module for Python 2/3 to interact with My.Jdownloader. This is in a WIP p
 ## How to use the api? ##
 Example:
 
-,,,python
+```python
 #First of all you have to make an instance of the Myjdapi class and set your APPKey:
 import myjdapi
 
@@ -54,7 +54,7 @@ device.downloads.query_packages([{
                 "maxResults" : -1,
                 "startAt" : 0,
             }])
-,,,
+```
 
 
 # LICENSE
