@@ -1,9 +1,9 @@
 # My.Jdownloader-API-Python-Library
-** DEVELOP BRANCH **
+## **DEVELOP BRANCH**
 
 This a module for Python 2/3 to interact with My.Jdownloader. This is in a WIP project.You're free to use it following the MIT license and any collaboration is appreciated.
 
-## How to use the api? ##
+## How to use the api?
 Example:
 
 ```python
