@@ -1,36 +1,61 @@
 # My.Jdownloader-API-Python-Library
+This a module for Python 2/3 to interact with My.Jdownloader. This is in a WIP project.You're free to use it following the MIT license and any collaboration is appreciated.
 
-##OLD VERSION: CHECK NEW VERSION IN DEVELOP BRANCH
+## How to use the api?
+**NEW:** Now you can install it using pip from the pypi repo.
+> pip install myjdapi
 
-**INFO: I'm working on a new version on the 'develop' branch. It will change functions names and other things. So if you want to use this library  you might want to check that branch first, especially if you want to use python 2.7 since that branch supports it.**
-**Also the API specifications provided by JDownloader Team have been improved and probably a lot of the functions I will be available to do them now with more information.**
-**Finally, I will try to put it on PyPI so you can easily install it using 'pip'.**
+Example:
 
-This a module for Python 3 to interact with My.Jdownloader. This is in a WIP project.You're free to use it following the MIT license and any collaboration is appreciated.
-
-To use this API you need to use a "APPkey".This APPkey can be anything you want but it's recommended to be something that identifies your project or a URL to it. Right now this module uses "http://git.io/vmcsk" as the APPKey, but this APPKey is intended just for testing and for little projects, it's recommended that you uses your own "APPKey" so if for some reason this APPKey gets blocked you don't get affected.
-
-
-Right now the only things working are:
-  - JD: 
-    - Connect,Disconnect,Reconnect,GetDevices,listDevices
-  - JD.Device:
-    - action,addLinks
-
-Example of usage:
-```
+```python
+#First of all you have to make an instance of the Myjdapi class and set your APPKey:
 import myjdapi
 
-jd=myjdapi.myjdapi()
-jd.connect("example@example.com","password")
-jd.getDevices()
-jd.getDevice(name="DeviceName").linkgrabber.addLinks([{"autostart" : False, "links" : "https://mega.nz/#!xxxxxxxxxxxxxxxxxxxxxxxxxxxx,http://mediafire.com/download/xxxxxxxxxxxxxxxx/","packageName" : "TEST" }])
+jd=myjdapi.Myjdapi()
+jd.set_app_key("EXAMPLE")
 
+"""
+After that you can connect.
+Now you can only connect using username and password.
+This is a problem because you can't remember the session between executions
+for this reason i will add a way to "connect" which is actually not connecting, 
+but adding the old tokens you saved. This way you can use this between executions
+as long as your tokens are still valid without saving the username and password.
+"""
+
+jd.connect("email","password")
+
+# When connecting it gets the devices also, so you can use them but if you want to 
+# gather the devices available in my.jdownloader later you can do it like this
+
+jd.update_devices()
+
+# Now you are ready to do actions with devices. To use a device you get it like this:
+device=jd.get_device("TEST") 
+# The parameter by default is the device name, but you can also use the device_id.
+device=jd.get_device(device_id="43434")
+
+# After that you can use the different API functions.
+# For example i want to get the packages of the downloads list, the API has a function under downloads called queryPackages,
+# you can use it with this library like this:
+device.downloads.query_packages([{
+                "bytesLoaded" : True,
+                "bytesTotal" : True,
+                "comment" : False,
+                "enabled" : True,
+                "eta" : True,
+                "priority" : False,
+                "finished" : True,
+                "running" : True,
+                "speed" : True,
+                "status" : True,
+                "childCount" : True,
+                "hosts" : True,
+                "saveTo" : True,
+                "maxResults" : -1,
+                "startAt" : 0,
+            }])
 ```
-
-
-
-
 # DOCUMENTATION
 
 http://myjdownloader-api-python-library.readthedocs.org/en/latest/myjdapi.html#module-myjdapi
