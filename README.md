@@ -4,6 +4,9 @@
 This a module for Python 2/3 to interact with My.Jdownloader. This is in a WIP project.You're free to use it following the MIT license and any collaboration is appreciated.
 
 ## How to use the api?
+**NEW:** Now you can install it using pip from the pypi repo.
+> pip install myjdapi
+
 Example:
 
 ```python
