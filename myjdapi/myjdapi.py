@@ -30,6 +30,146 @@ def UNPAD(s):
     except:                     # For python 2
         return s[0:-ord(s[-1])]
 
+class System:
+    """
+    Class that represents the system-functionality of a Device
+    """
+    def __init__(self, device):
+        self.device = device
+        self.url = '/system'
+
+    def exit_jd(self):
+        """
+
+        :return:
+        """
+        resp = self.device.action(self.url + "/exitJD")
+        return resp
+
+    def restart_jd(self):
+        """
+
+        :return:
+        """
+        resp = self.device.action(self.url + "/restartJD")
+        return resp
+
+    def hibernate_os(self):
+        """
+
+        :return:
+        """
+        resp = self.device.action(self.url + "/hibernateOS")
+        return resp
+
+    def shutdown_os(self, force):
+        """
+
+        :param force:  Force Shutdown of OS
+        :return:
+        """
+        params = force
+        resp = self.device.action(self.url + "/shutdownOS", params)
+        return resp
+
+    def standby_os(self):
+        """
+
+        :return:
+        """
+        resp = self.device.action(self.url + "/standbyOS")
+        return resp
+		
+class Update:
+    """
+    Class that represents the update-functionality of a Device
+    """
+    def __init__(self, device):
+        self.device = device
+        self.url = '/update'
+
+    def restart_and_update(self):
+        """
+
+        :return:
+        """
+        resp = self.device.action(self.url + "/restartAndUpdate")
+        return resp
+
+    def run_update_check(self):
+        """
+
+        :return:
+        """
+        resp = self.device.action(self.url + "/runUpdateCheck")
+        return resp
+
+    def is_update_available(self):
+        """
+
+        :return:
+        """
+        resp = self.device.action(self.url + "/isUpdateAvailable")
+        return resp
+		
+class DownloadController:
+    """
+    Class that represents the download-controller of a Device
+    """
+    def __init__(self, device):
+        self.device = device
+        self.url = '/downloadcontroller'
+
+    def start_downloads(self):
+        """
+
+        :return:
+        """
+        resp = self.device.action(self.url+"/start")
+        return resp
+
+    def stop_downloads(self):
+        """
+
+        :return:
+        """
+        resp = self.device.action(self.url + "/stop")
+        return resp
+
+    def pause_downloads(self, value):
+        """
+
+        :param value:
+        :return:
+        """
+        params = [value]
+        resp = self.device.action(self.url + "/pause", params)
+        return resp
+
+    def get_speed_in_bytes(self):
+        """
+
+        :return:
+        """
+        resp = self.device.action(self.url + "/getSpeedInBps")
+        return resp
+
+    def force_download(self, link_ids, package_ids):
+        """
+        :param link_ids:
+        :param package_ids:
+        :return:
+        """
+        pass
+
+    def get_current_state(self):
+        """
+
+        :return:
+        """
+        resp = self.device.action(self.url + "/getCurrentState")
+        return resp
+
 class Linkgrabber:
     """
     Class that represents the linkgrabber of a Device
@@ -420,6 +560,9 @@ class Jddevice:
         self.myjd = jd
         self.linkgrabber = Linkgrabber(self)
         self.downloads = Downloads(self)
+        self.downloadcontroller = DownloadController(self)
+        self.update = Update(self)
+        self.system = System(self)
 
     def action(self, path, params=(), http_action="POST"):
         """Execute any action in the device using the postparams and params.
