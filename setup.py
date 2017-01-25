@@ -11,7 +11,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 setup(
     name='myjdapi',
-    version='1.0.1',
+    version='1.0.2',
     description='Library to use My.Jdownloader API in an easy way.',
     long_description=long_description,
     url='https://github.com/mmarquezs/libgen-python-api/',
