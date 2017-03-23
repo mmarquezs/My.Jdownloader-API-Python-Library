@@ -160,7 +160,9 @@ class DownloadController:
         :param package_ids:
         :return:
         """
-        pass
+        params = [link_ids, package_ids]
+        resp = self.device.action(self.url + "/forceDownload", params)
+        return resp
 
     def get_current_state(self):
         """
