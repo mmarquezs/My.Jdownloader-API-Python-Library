@@ -581,10 +581,21 @@ class Jddevice:
         self.downloadcontroller = DownloadController(self)
         self.update = Update(self)
         self.system = System(self)
-        self.direct_connection_established = 0
+        self.direct_connection_established = None
         self.device_api = None
         self.direct_connection = None
         self.direct_connection = self.action("/device/getDirectConnectionInfos")
+
+    def direct_connect(self):
+        for connection in self.direct_connection['infos']:
+            test_api = "http://" + connection["ip"] + ":" + str(connection["port"])
+            response = self.myjd.request_api("/device/ping", "POST", None, self.__action_url(), test_api)
+            if response:
+                self.direct_connection_established = True
+                self.device_api = test_api
+                return
+        self.device_api = None
+        self.direct_connection_established = False
 
     def action(self, path, params=(), http_action="POST"):
         """Execute any action in the device using the postparams and params.
@@ -596,18 +607,16 @@ class Jddevice:
         :param postparams: List of Params that are send in the post.
         """
         action_url = self.__action_url()
-        if self.direct_connection and not self.direct_connection_established:
-            for connection in self.direct_connection['infos']:
-                test_api = "http://" + connection["ip"] + ":" + str(connection["port"])
-                response = self.myjd.request_api("/device/ping", http_action, None, action_url, test_api)
-                if response:
-                    self.direct_connection_established = 1
-                    self.device_api = test_api
-                    break
+        if self.direct_connection and self.direct_connection_established is None:
+            self.direct_connect()
         response = self.myjd.request_api(path, http_action, params, action_url, self.device_api)
         if response is None:
             if self.direct_connection_established:
-                self.direct_connection_established = 0
+                self.direct_connect()
+                if not self.direct_connection_established:
+                    response = self.myjd.request_api(path, http_action, params, action_url)
+                    if response:
+                        return response['data']
             return False
         return response['data']
 
