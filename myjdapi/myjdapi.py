@@ -613,10 +613,9 @@ class Jddevice:
         if response is None:
             if self.direct_connection_established:
                 self.direct_connect()
-                if not self.direct_connection_established:
-                    response = self.myjd.request_api(path, http_action, params, action_url)
-                    if response:
-                        return response['data']
+                response = self.myjd.request_api(path, http_action, params, action_url, self.device_api)
+                if response:
+                    return response['data']
             return False
         return response['data']
 
