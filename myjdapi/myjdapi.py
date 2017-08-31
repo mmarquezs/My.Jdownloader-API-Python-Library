@@ -583,11 +583,10 @@ class Jddevice:
         self.system = System(self)
         self.direct_connection_established = None
         self.device_api = None
-        self.direct_connection = None
-        self.direct_connection = self.action("/device/getDirectConnectionInfos")
 
     def direct_connect(self):
-        for connection in self.direct_connection['infos']:
+        direct_connection_info = self.myjd.request_api("/device/getDirectConnectionInfos", "POST", None, self.__action_url())['data']
+        for connection in direct_connection_info['infos']:
             test_api = "http://" + connection["ip"] + ":" + str(connection["port"])
             response = self.myjd.request_api("/device/ping", "POST", None, self.__action_url(), test_api)
             if response:
@@ -607,7 +606,7 @@ class Jddevice:
         :param postparams: List of Params that are send in the post.
         """
         action_url = self.__action_url()
-        if self.direct_connection and self.direct_connection_established is None:
+        if self.direct_connection_established is None:
             self.direct_connect()
         response = self.myjd.request_api(path, http_action, params, action_url, self.device_api)
         if response is None:
