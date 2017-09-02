@@ -581,20 +581,16 @@ class Jddevice:
         self.downloadcontroller = DownloadController(self)
         self.update = Update(self)
         self.system = System(self)
-        self.direct_connection_established = None
-        self.device_api = None
+        self.__direct_connection_info = None
+        self.__refresh_direct_connections()
 
-    def direct_connect(self):
-        direct_connection_info = self.myjd.request_api("/device/getDirectConnectionInfos", "POST", None, self.__action_url())['data']
-        for connection in direct_connection_info['infos']:
-            test_api = "http://" + connection["ip"] + ":" + str(connection["port"])
-            response = self.myjd.request_api("/device/ping", "POST", None, self.__action_url(), test_api)
-            if response:
-                self.direct_connection_established = True
-                self.device_api = test_api
-                return
-        self.device_api = None
-        self.direct_connection_established = False
+    def __refresh_direct_connections(self):
+        response = self.myjd.request_api("/device/getDirectConnectionInfos", "POST", None, self.__action_url())
+        if response is not None \
+           and 'data' in response \
+           and 'infos' in response["data"] \
+           and len(response["data"]["infos"])!=0:
+            self.__direct_connection_info = response["data"]["infos"]
 
     def action(self, path, params=(), http_action="POST"):
         """Execute any action in the device using the postparams and params.
@@ -606,17 +602,36 @@ class Jddevice:
         :param postparams: List of Params that are send in the post.
         """
         action_url = self.__action_url()
-        if self.direct_connection_established is None:
-            self.direct_connect()
-        response = self.myjd.request_api(path, http_action, params, action_url, self.device_api)
-        if response is None:
-            if self.direct_connection_established:
-                self.direct_connect()
-                response = self.myjd.request_api(path, http_action, params, action_url, self.device_api)
-                if response:
+        if self.__direct_connection_info is None:
+            # No direct connection available, we use My.JDownloader api.
+            response = self.myjd.request_api(path, http_action, params, action_url )
+            if response is None:
+                # My.JDownloader Api failed too.
+                return False
+            else:
+                # My.JDownloader Api worked, lets refresh the direct connections and return
+                # the response.
+                self.__refresh_direct_connections()
+                return response['data']
+        else:
+            # Direct connection info available, we try to use it.
+            for connection in self.__direct_connection_info:
+                api = "http://" + connection["ip"] + ":" + str(connection["port"])
+                # if self.myjd.request_api("/device/ping", "POST", None, self.__action_url(), api):
+                response = self.myjd.request_api(path, http_action, params, action_url, api)
+                if response is not None:
                     return response['data']
-            return False
-        return response['data']
+            # None of the direct connections worked, we use the My.JDownloader api
+            response = self.myjd.request_api(path, http_action, params, action_url )
+            if response is None:
+                # My.JDownloader Api failed too.
+                return False
+            else:
+                # My.JDownloader Api worked, lets refresh the direct connections and return
+                # the response.
+                self.__refresh_direct_connections()
+                return response['data']
+        return False
 
     def __action_url(self):
         return "/t_" + self.myjd.get_session_token() + "_" + self.device_id
