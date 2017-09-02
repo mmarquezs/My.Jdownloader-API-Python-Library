@@ -325,7 +325,7 @@ class Linkgrabber:
         resp = self.device.action(self.url+"/setPriority", params)
         return resp
 
-    def set_enabled(self, ):
+    def set_enabled(self, params):
         """
 
         My guess is that it Enables/Disables a download, but i haven't got it working.
