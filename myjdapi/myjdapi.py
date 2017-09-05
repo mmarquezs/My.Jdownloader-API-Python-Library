@@ -583,6 +583,7 @@ class Jddevice:
         self.system = System(self)
         self.__direct_connection_info = None
         self.__refresh_direct_connections()
+        self.__direct_connection_enabled = True
 
     def __refresh_direct_connections(self):
         response = self.myjd.request_api("/device/getDirectConnectionInfos", "POST", None, self.__action_url())
@@ -591,6 +592,15 @@ class Jddevice:
            and 'infos' in response["data"] \
            and len(response["data"]["infos"])!=0:
             self.__direct_connection_info = response["data"]["infos"]
+
+
+
+    def enable_direct_connection(self):
+        self.__direct_connection_enabled = True
+        self.__refresh_direct_connections()
+    def disable_direct_connection(self):
+        self.__direct_connection_enabled = False
+        self.__direct_connection_info = None
 
     def action(self, path, params=(), http_action="POST"):
         """Execute any action in the device using the postparams and params.
@@ -602,7 +612,7 @@ class Jddevice:
         :param postparams: List of Params that are send in the post.
         """
         action_url = self.__action_url()
-        if self.__direct_connection_info is None:
+        if not self.__direct_connection_enabled or self.__direct_connection_info is None:
             # No direct connection available, we use My.JDownloader api.
             response = self.myjd.request_api(path, http_action, params, action_url )
             if response is None:
@@ -611,7 +621,8 @@ class Jddevice:
             else:
                 # My.JDownloader Api worked, lets refresh the direct connections and return
                 # the response.
-                self.__refresh_direct_connections()
+                if self.__direct_connection_enabled:
+                    self.__refresh_direct_connections()
                 return response['data']
         else:
             # Direct connection info available, we try to use it.
