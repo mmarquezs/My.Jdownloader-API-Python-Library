@@ -588,11 +588,26 @@ class Jddevice:
     def __refresh_direct_connections(self):
         response = self.myjd.request_api("/device/getDirectConnectionInfos", "POST", None, self.__action_url())
         if response is not None \
-           and 'data' in response \
-           and 'infos' in response["data"] \
-           and len(response["data"]["infos"])!=0:
-            self.__direct_connection_info = response["data"]["infos"]
+            and 'data' in response \
+            and 'infos' in response["data"] \
+            and len(response["data"]["infos"])!=0:
+            self.__update_direct_connections(response["data"]["infos"])
 
+    def __update_direct_connections(self, direct_info):
+        """
+        Updates the direct_connections info keeping the order.
+        """
+        tmp = []
+        if self.__direct_connection_info is None:
+            self.__direct_connection_info = direct_info
+        for conn in direct_info:
+            if conn in self.__direct_connection_info:
+                # We insert it in the same index as originally.
+                tmp.insert(self.__direct_connection_info.index(conn), conn)
+            else:
+                # We append it to the list
+                tmp.append(conn)
+        self.__direct_connection_info = tmp
 
 
     def enable_direct_connection(self):
@@ -631,6 +646,9 @@ class Jddevice:
                 # if self.myjd.request_api("/device/ping", "POST", None, self.__action_url(), api):
                 response = self.myjd.request_api(path, http_action, params, action_url, api)
                 if response is not None:
+                    # This connection worked so we push it to the top of the list.
+                    self.__direct_connection_info.remove(connection)
+                    self.__direct_connection_info.insert(0,connection)
                     return response['data']
             # None of the direct connections worked, we use the My.JDownloader api
             response = self.myjd.request_api(path, http_action, params, action_url )
