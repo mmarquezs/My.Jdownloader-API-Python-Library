@@ -120,6 +120,10 @@ class Update:
         resp = self.device.action(self.url + "/isUpdateAvailable")
         return resp
 
+    def update_available(self):
+        self.run_update_check()
+        resp = self.is_update_available()
+        return resp
 
 class DownloadController:
     """
@@ -484,6 +488,35 @@ class Linkgrabber:
         """
         pass
 
+class Toolbar:
+    """
+    Class that represents the toolbar of a Device
+    """
+
+    def __init__(self, device):
+        self.device = device
+        self.url = "/toolbar"
+
+    def get_status(self, params=None):
+        resp = self.device.action(self.url + "/getStatus")
+        return resp
+
+    def status_downloadSpeedLimit(self):
+        self.status = self.get_status()
+        if self.status['limit']:
+            return 1
+        else:
+            return 0
+
+    def enable_downloadSpeedLimit(self):
+        self.limit_enabled = self.status_downloadSpeedLimit()
+        if not self.limit_enabled:
+            self.device.action(self.url + "/toggleDownloadSpeedLimit")
+
+    def disable_downloadSpeedLimit(self):
+        self.limit_enabled = self.status_downloadSpeedLimit()
+        if self.limit_enabled:
+            self.device.action(self.url + "/toggleDownloadSpeedLimit")
 
 class Downloads:
     """
@@ -588,6 +621,7 @@ class Jddevice:
         self.myjd = jd
         self.linkgrabber = Linkgrabber(self)
         self.downloads = Downloads(self)
+        self.toolbar = Toolbar(self)
         self.downloadcontroller = DownloadController(self)
         self.update = Update(self)
         self.system = System(self)
