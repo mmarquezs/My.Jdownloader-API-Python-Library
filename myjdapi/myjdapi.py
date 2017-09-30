@@ -594,6 +594,8 @@ class Jddevice:
         self.__direct_connection_info = None
         self.__refresh_direct_connections()
         self.__direct_connection_enabled = True
+        self.__direct_connection_cooldown = 0
+        self.__direct_connection_consecutive_failures = 0
 
     def __refresh_direct_connections(self):
         response = self.myjd.request_api("/device/getDirectConnectionInfos",
@@ -610,20 +612,27 @@ class Jddevice:
         """
         tmp = []
         if self.__direct_connection_info is None:
-            self.__direct_connection_info = direct_info
-        for conn in direct_info:
-            if conn in self.__direct_connection_info:
-                # We insert it in the same index as originally.
-                tmp.insert(self.__direct_connection_info.index(conn), conn)
+            self.__direct_connection_info = []
+            for conn in direct_info:
+                tmp.append({'conn': conn, 'cooldown': 0})
+            self.__direct_connection_info = tmp
+            return
+        #  We copy old connections
+        tmp = self.__direct_connection_info
+        #  We remove old connections not available anymore.
+        for i in tmp:
+            if i['conn'] not in direct_info:
+                tmp.remove(i)
             else:
-                # We append it to the list
-                tmp.append(conn)
+                direct_info.remove(i['conn'])
+        for conn in direct_info:
+            tmp.append({'conn': conn, 'cooldown': 0})
         self.__direct_connection_info = tmp
-
 
     def enable_direct_connection(self):
         self.__direct_connection_enabled = True
         self.__refresh_direct_connections()
+
     def disable_direct_connection(self):
         self.__direct_connection_enabled = False
         self.__direct_connection_info = None
@@ -638,7 +647,8 @@ class Jddevice:
         :param postparams: List of Params that are send in the post.
         """
         action_url = self.__action_url()
-        if not self.__direct_connection_enabled or self.__direct_connection_info is None:
+        if not self.__direct_connection_enabled or self.__direct_connection_info is None \
+           or time.time() < self.__direct_connection_cooldown:
             # No direct connection available, we use My.JDownloader api.
             response = self.myjd.request_api(path, http_action, params,
                                              action_url)
@@ -648,13 +658,14 @@ class Jddevice:
             else:
                 # My.JDownloader Api worked, lets refresh the direct connections and return
                 # the response.
-                if self.__direct_connection_enabled:
+                if self.__direct_connection_enabled \
+                   and time.time() >= self.__direct_connection_cooldown:
                     self.__refresh_direct_connections()
                 return response['data']
         else:
             # Direct connection info available, we try to use it.
             for conn in self.__direct_connection_info:
-                if time.time() - conn['timeout'] >= 0:
+                if time.time() > conn['cooldown']:
                     # We can use the connection
                     connection = conn['conn']
                     api = "http://" + connection["ip"] + ":" + str(
@@ -666,21 +677,25 @@ class Jddevice:
                         # This connection worked so we push it to the top of the list.
                         self.__direct_connection_info.remove(conn)
                         self.__direct_connection_info.insert(0, conn)
+                        self.__direct_connection_consecutive_failures = 0
                         return response['data']
                     else:
                         # We don't try to use this connection for a minute.
-                        conn['timeout'] = time.time() + 60
+                        conn['cooldown'] = time.time() + 60
+            # None of the direct connections worked, we set a cooldown for direct connections
+            self.__direct_connection_consecutive_failures += 1
+            self.__direct_connection_cooldown = time.time() + \
+                                                (60 * self.__direct_connection_consecutive_failures)
             # None of the direct connections worked, we use the My.JDownloader api
             response = self.myjd.request_api(path, http_action, params,
                                              action_url)
             if response is None:
                 # My.JDownloader Api failed too.
                 return False
-            else:
-                # My.JDownloader Api worked, lets refresh the direct connections and return
-                # the response.
-                self.__refresh_direct_connections()
-                return response['data']
+        # My.JDownloader Api worked, lets refresh the direct connections and return
+        # the response.
+            self.__refresh_direct_connections()
+            return response['data']
         return False
 
     def __action_url(self):
