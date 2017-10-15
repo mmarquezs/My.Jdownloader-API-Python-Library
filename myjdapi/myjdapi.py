@@ -834,7 +834,13 @@ class Myjdapi:
                 request_url=self.__api_url+path
             encrypted_response = requests.post(request_url,headers={"Content-Type": "application/aesjson-jd; charset=utf-8"},data=encrypted_data)
         if encrypted_response.status_code != 200:
-            error_msg=json.loads(self.__decrypt(self.__device_encryption_token, encrypted_response.text))
+            try:
+                error_msg = json.loads(encrypted_response.text)
+            except json.JSONDecodeError:
+                try:
+                    error_msg = json.loads(self.__decrypt(self.__device_encryption_token, encrypted_response.text))
+                except json.JSONDecodeError:
+                    raise MYJDException("Failed to decode response: {}", encrypted_response.text)
             msg="\n\tSOURCE: "+error_msg["src"]+"\n\tTYPE: "+ \
                                 error_msg["type"]+"\n------\nREQUEST_URL: "+ \
                                 self.__api_url+path
