@@ -825,6 +825,16 @@ class Myjdapi:
         :returns: boolean -- True if succesful, False if there was any error.
 
         """
+        self.update_request_id()
+        self.__login_secret = None
+        self.__device_secret = None
+        self.__session_token = None
+        self.__regain_token = None
+        self.__server_encryption_token = None
+        self.__device_encryption_token = None
+        self.__devices = None
+        self.__connected = False
+
         self.__login_secret = self.__secret_create(email, password, "server")
         self.__device_secret = self.__secret_create(email, password, "device")
         response = self.request_api("/my/connect", "GET", [("email", email),
