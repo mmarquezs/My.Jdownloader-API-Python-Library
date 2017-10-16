@@ -994,10 +994,17 @@ class Myjdapi:
             except requests.exceptions.RequestException as e:
                 return None
         if encrypted_response.status_code != 200:
-            error_msg = json.loads(encrypted_response.text)
-            msg = "\n\tSOURCE: " + error_msg["src"] + "\n\tTYPE: " + \
-                  error_msg["type"] + "\n------\nREQUEST_URL: " + \
-                  api + path
+
+            try:
+                error_msg = json.loads(encrypted_response.text)
+            except json.JSONDecodeError:
+                try:
+                    error_msg = json.loads(self.__decrypt(self.__device_encryption_token, encrypted_response.text))
+                except json.JSONDecodeError:
+                    raise MYJDException("Failed to decode response: {}", encrypted_response.text)
+            msg="\n\tSOURCE: "+error_msg["src"]+"\n\tTYPE: "+ \
+                                error_msg["type"]+"\n------\nREQUEST_URL: "+ \
+                                api+path
             if http_method == "GET":
                 msg += query
             msg += "\n"
