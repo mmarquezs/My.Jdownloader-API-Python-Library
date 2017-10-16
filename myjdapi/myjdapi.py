@@ -612,19 +612,17 @@ class Jddevice:
         """
         tmp = []
         if self.__direct_connection_info is None:
-            self.__direct_connection_info = []
             for conn in direct_info:
                 tmp.append({'conn': conn, 'cooldown': 0})
             self.__direct_connection_info = tmp
             return
-        #  We copy old connections
-        tmp = self.__direct_connection_info
         #  We remove old connections not available anymore.
-        for i in tmp:
+        for i in self.__direct_connection_info:
             if i['conn'] not in direct_info:
                 tmp.remove(i)
             else:
                 direct_info.remove(i['conn'])
+        #We add new connections
         for conn in direct_info:
             tmp.append({'conn': conn, 'cooldown': 0})
         self.__direct_connection_info = tmp
