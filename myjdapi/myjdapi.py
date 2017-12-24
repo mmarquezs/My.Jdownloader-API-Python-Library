@@ -844,6 +844,7 @@ class Myjdapi:
         self.__regain_token = response["regaintoken"]
         self.__update_encryption_tokens()
         self.update_devices()
+        return response
 
     def reconnect(self):
         """
@@ -859,6 +860,7 @@ class Myjdapi:
         self.__session_token = response["sessiontoken"]
         self.__regain_token = response["regaintoken"]
         self.__update_encryption_tokens()
+        return response
 
     def disconnect(self):
         """
@@ -878,6 +880,7 @@ class Myjdapi:
         self.__device_encryption_token = None
         self.__devices = None
         self.__connected = False
+        return response
 
     def update_devices(self):
         """
