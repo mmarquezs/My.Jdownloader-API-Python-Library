@@ -32,5 +32,5 @@ setup(
     keywords='myjdapi jdownloader my.jdownloader api development',
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
     # py_modules=["libgenapi"],
-    install_requires=['requests','pycrypto'],
+    install_requires=['requests','pycryptodome'],
 )
