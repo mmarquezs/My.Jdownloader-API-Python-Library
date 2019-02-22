@@ -346,18 +346,8 @@ class Linkgrabber:
         resp = self.device.action(self.url + "/setPriority", params)
         return resp
 
-    def set_enabled(self, params):
-        """
-
-        My guess is that it Enables/Disables a download, but i haven't got it working.
-
-        :param params: List with a boolean (enable/disable download), my guess
-        the parameters are package uuid, download uuid. Ex:
-        [False,2453556,2334455].
-        :type: List
-        :rtype:
-
-        """
+    def set_enabled(self, enabled, link_ids=[], package_ids=[]):
+        params = [enabled, link_ids, package_ids]
         resp = self.device.action(self.url + "/setEnabled", params)
         return resp
 
@@ -601,6 +591,16 @@ class Downloads:
         params = [links_ids, packages_ids]
         params += [action, mode, selection_type]
         resp = self.device.action(self.url + "/cleanup", params)
+        return resp
+
+    def set_enabled(self, enabled, link_ids=[], package_ids=[]):
+        params = [enabled, link_ids, package_ids]
+        resp = self.device.action(self.url + "/setEnabled", params)
+        return resp
+
+    def force_download(self, link_ids=[], package_ids=[]):
+        params = [link_ids, package_ids]
+        resp = self.device.action(self.url + "/forceDownload", params)
         return resp
 
 
