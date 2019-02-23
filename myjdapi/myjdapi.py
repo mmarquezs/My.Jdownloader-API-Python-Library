@@ -125,6 +125,7 @@ class Update:
         resp = self.is_update_available()
         return resp
 
+
 class DownloadController:
     """
     Class that represents the download-controller of a Device
@@ -203,15 +204,15 @@ class Linkgrabber:
         resp = self.device.action(self.url + "/clearList", http_action="POST")
         return resp
 
-    def move_to_downloadlist(self, links_ids, packages_ids):
+    def move_to_downloadlist(self, link_ids, package_ids):
         """
         Moves packages and/or links to download list.
 
-        :param packages: Packages UUID.
+        :param package_ids: Package UUID's.
         :type: list of strings.
-        :param links: Links UUID.
+        :param link_ids: Link UUID's.
         """
-        params = [links_ids, packages_ids]
+        params = [link_ids, package_ids]
         resp = self.device.action(self.url + "/moveToDownloadlist", params)
         return resp
 
@@ -280,15 +281,15 @@ class Linkgrabber:
                 action,
                 mode,
                 selection_type,
-                links_ids=[],
-                packages_ids=[]):
+                link_ids=[],
+                package_ids=[]):
         """
         Clean packages and/or links of the linkgrabber list.
-        Requires at least a packages_ids or links_ids list, or both.
+        Requires at least a package_ids or link_ids list, or both.
 
-        :param packages_ids: Packages UUID.
+        :param package_ids: Package UUID's.
         :type: list of strings.
-        :param links_ids: Links UUID.
+        :param link_ids: link UUID's.
         :type: list of strings
         :param action: Action to be done. Actions: DELETE_ALL, DELETE_DISABLED, DELETE_FAILED, DELETE_FINISHED, DELETE_OFFLINE, DELETE_DUPE, DELETE_MODE
         :type: str:
@@ -297,7 +298,7 @@ class Linkgrabber:
         :param selection_type: Type of selection to use. Types: SELECTED, UNSELECTED, ALL, NONE
         :type: str:
         """
-        params = [links_ids, packages_ids]
+        params = [link_ids, package_ids]
         params += [action, mode, selection_type]
         resp = self.device.action(self.url + "/cleanup", params)
         return resp
@@ -316,33 +317,33 @@ class Linkgrabber:
         resp = self.device.action(self.url + "/addContainer", params)
         return resp
 
-    def get_download_urls(self, links_ids, packages_ids, url_display_type):
+    def get_download_urls(self, link_ids, package_ids, url_display_type):
         """
         Gets download urls from Linkgrabber.
 
-        :param packages_ids: Packages UUID.
+        :param package_ids: Package UUID's.
         :type: List of strings.
-        :param Links_ids: Links UUID.
+        :param link_ids: link UUID's.
         :type: List of strings
         :param url_display_type: No clue. Not documented
         :type: Dictionary
         """
-        params = [packages_ids, links_ids, url_display_type]
+        params = [package_ids, link_ids, url_display_type]
         resp = self.device.action(self.url + "/getDownloadUrls", params)
         return resp
 
-    def set_priority(self, priority, links_ids, packages_ids):
+    def set_priority(self, priority, link_ids, package_ids):
         """
         Sets the priority of links or packages.
 
-        :param packages_ids: Packages UUID.
+        :param package_ids: Package UUID's.
         :type: list of strings.
-        :param links_ids: Links UUID.
+        :param link_ids: link UUID's.
         :type: list of strings
         :param priority: Priority to set. Priorities: HIGHEST, HIGHER, HIGH, DEFAULT, LOWER;
         :type: str:
         """
-        params = [priority, links_ids, packages_ids]
+        params = [priority, link_ids, package_ids]
         resp = self.device.action(self.url + "/setPriority", params)
         return resp
 
@@ -488,6 +489,7 @@ class Linkgrabber:
         """
         pass
 
+
 class Toolbar:
     """
     Class that represents the toolbar of a Device
@@ -517,6 +519,7 @@ class Toolbar:
         self.limit_enabled = self.status_downloadSpeedLimit()
         if self.limit_enabled:
             self.device.action(self.url + "/toggleDownloadSpeedLimit")
+
 
 class Downloads:
     """
@@ -581,15 +584,15 @@ class Downloads:
                 action,
                 mode,
                 selection_type,
-                links_ids=[],
-                packages_ids=[]):
+                link_ids=[],
+                package_ids=[]):
         """
         Clean packages and/or links of the linkgrabber list.
-        Requires at least a packages_ids or links_ids list, or both.
+        Requires at least a package_ids or link_ids list, or both.
 
-        :param packages_ids: Packages UUID.
+        :param package_ids: Package UUID's.
         :type: list of strings.
-        :param links_ids: Links UUID.
+        :param link_ids: link UUID's.
         :type: list of strings
         :param action: Action to be done. Actions: DELETE_ALL, DELETE_DISABLED, DELETE_FAILED, DELETE_FINISHED, DELETE_OFFLINE, DELETE_DUPE, DELETE_MODE
         :type: str:
@@ -598,7 +601,7 @@ class Downloads:
         :param selection_type: Type of selection to use. Types: SELECTED, UNSELECTED, ALL, NONE
         :type: str:
         """
-        params = [links_ids, packages_ids]
+        params = [link_ids, package_ids]
         params += [action, mode, selection_type]
         resp = self.device.action(self.url + "/cleanup", params)
         return resp
@@ -635,9 +638,9 @@ class Jddevice:
         response = self.myjd.request_api("/device/getDirectConnectionInfos",
                                          "POST", None, self.__action_url())
         if response is not None \
-            and 'data' in response \
-            and 'infos' in response["data"] \
-            and len(response["data"]["infos"])!=0:
+                and 'data' in response \
+                and 'infos' in response["data"] \
+                and len(response["data"]["infos"]) != 0:
             self.__update_direct_connections(response["data"]["infos"])
 
     def __update_direct_connections(self, direct_info):
@@ -656,7 +659,7 @@ class Jddevice:
                 tmp.remove(i)
             else:
                 direct_info.remove(i['conn'])
-        #We add new connections
+        # We add new connections
         for conn in direct_info:
             tmp.append({'conn': conn, 'cooldown': 0})
         self.__direct_connection_info = tmp
@@ -680,7 +683,7 @@ class Jddevice:
         """
         action_url = self.__action_url()
         if not self.__direct_connection_enabled or self.__direct_connection_info is None \
-           or time.time() < self.__direct_connection_cooldown:
+                or time.time() < self.__direct_connection_cooldown:
             # No direct connection available, we use My.JDownloader api.
             response = self.myjd.request_api(path, http_action, params,
                                              action_url)
@@ -691,7 +694,7 @@ class Jddevice:
                 # My.JDownloader Api worked, lets refresh the direct connections and return
                 # the response.
                 if self.__direct_connection_enabled \
-                   and time.time() >= self.__direct_connection_cooldown:
+                        and time.time() >= self.__direct_connection_cooldown:
                     self.__refresh_direct_connections()
                 return response['data']
         else:
@@ -724,11 +727,10 @@ class Jddevice:
             if response is None:
                 # My.JDownloader Api failed too.
                 return False
-        # My.JDownloader Api worked, lets refresh the direct connections and return
-        # the response.
+            # My.JDownloader Api worked, lets refresh the direct connections and return
+            # the response.
             self.__refresh_direct_connections()
             return response['data']
-        return False
 
     def __action_url(self):
         return "/t_" + self.myjd.get_session_token() + "_" + self.device_id
@@ -992,14 +994,14 @@ class Myjdapi:
             if self.__server_encryption_token is None:
                 query += [
                     "signature=" \
-                        + str(self.__signature_create(self.__login_secret,
-                                                      query[0] + "&".join(query[1:])))
+                    + str(self.__signature_create(self.__login_secret,
+                                                  query[0] + "&".join(query[1:])))
                 ]
             else:
                 query += [
                     "signature=" \
-                        + str(self.__signature_create(self.__server_encryption_token,
-                                                      query[0] + "&".join(query[1:])))
+                    + str(self.__signature_create(self.__server_encryption_token,
+                                                  query[0] + "&".join(query[1:])))
                 ]
             query = query[0] + "&".join(query[1:])
             encrypted_response = requests.get(api + query, timeout=3)
@@ -1047,9 +1049,9 @@ class Myjdapi:
                     error_msg = json.loads(self.__decrypt(self.__device_encryption_token, encrypted_response.text))
                 except json.JSONDecodeError:
                     raise MYJDException("Failed to decode response: {}", encrypted_response.text)
-            msg="\n\tSOURCE: "+error_msg["src"]+"\n\tTYPE: "+ \
-                                error_msg["type"]+"\n------\nREQUEST_URL: "+ \
-                                api+path
+            msg = "\n\tSOURCE: " + error_msg["src"] + "\n\tTYPE: " + \
+                  error_msg["type"] + "\n------\nREQUEST_URL: " + \
+                  api + path
             if http_method == "GET":
                 msg += query
             msg += "\n"
