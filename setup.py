@@ -11,10 +11,10 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 setup(
     name='myjdapi',
-    version='1.0.2',
+    version='1.0.3-dev',
     description='Library to use My.Jdownloader API in an easy way.',
     long_description=long_description,
-    url='https://github.com/mmarquezs/libgen-python-api/',
+    url='https://github.com/mmarquezs/My.Jdownloader-API-Python-Library/',
     author='Marc Marquez Santamaria',
     author_email='mmsa1994@gmail.com',
     license='MIT',
