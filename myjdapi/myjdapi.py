@@ -394,6 +394,13 @@ class Linkgrabber:
         """
         resp = self.device.action("/linkgrabberv2/addLinks", params)
         return resp
+    
+    def is_collecting(self):
+        """
+        Boolean status query about the collecting process
+        """
+        resp = self.device.action(self.url+"/isCollecting")
+        return resp
 
     def get_childrenchanged(self):
         """
