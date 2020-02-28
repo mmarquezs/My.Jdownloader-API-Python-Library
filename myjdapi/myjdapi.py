@@ -613,6 +613,36 @@ class Downloads:
         resp = self.device.action(self.url + "/forceDownload", params)
         return resp
 
+class Captcha:
+    """
+    Class that represents the captcha interface of a Device
+    """
+
+    def __init__(self, device):
+        self.device = device
+        self.url = "/captcha"
+
+    """
+    Get the waiting captchas
+    """
+    def list(self):
+        resp = self.device.action(self.url + "/list", [])
+        return resp
+
+    """
+    Get the base64 captcha image
+    """
+    def get(self, captcha_id):
+        resp = self.device.action(self.url + "/get", (captcha_id,))
+        return resp
+
+    """
+    Solve a captcha
+    """
+    def solve(self, captcha_id, solution):
+        resp = self.device.action(self.url + "/solve", (captcha_id, solution))
+        return resp
+
 
 class Jddevice:
     """
@@ -630,6 +660,7 @@ class Jddevice:
         self.device_type = device_dict["type"]
         self.myjd = jd
         self.linkgrabber = Linkgrabber(self)
+        self.captcha = Captcha(self)
         self.downloads = Downloads(self)
         self.toolbar = Toolbar(self)
         self.downloadcontroller = DownloadController(self)
