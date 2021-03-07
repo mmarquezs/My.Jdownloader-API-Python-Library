@@ -394,6 +394,13 @@ class Linkgrabber:
         """
         resp = self.device.action("/linkgrabberv2/addLinks", params)
         return resp
+    
+    def is_collecting(self):
+        """
+        Boolean status query about the collecting process
+        """
+        resp = self.device.action(self.url+"/isCollecting")
+        return resp
 
     def get_childrenchanged(self):
         """
@@ -458,12 +465,26 @@ class Linkgrabber:
         """
         pass
 
-    def query_packages(self):
-        """
-        No idea what parameters i have to pass and/or i don't know what it does.
-        If i find out i will implement it :P
-        """
-        pass
+    def query_packages(self,
+                       params=[{
+                           "availableOfflineCount":True,
+                           "availableOnlineCount":True,
+                           "availableTempUnknownCount":True,
+                           "availableUnknownCount":True,
+                           "bytesTotal":True,
+                           "childCount":True,
+                           "comment":True,
+                           "enabled":True,
+                           "hosts":True,
+                           "maxResults":-1,
+                           "packageUUIDs":[],
+                           "priority":True,
+                           "saveTo":True,
+                           "startAt":0,
+                           "status":True
+                       }]):
+        resp = self.device.action(self.url + "/queryPackages", params)
+        return resp
 
     def move_packages(self):
         """
@@ -606,6 +627,36 @@ class Downloads:
         resp = self.device.action(self.url + "/forceDownload", params)
         return resp
 
+class Captcha:
+    """
+    Class that represents the captcha interface of a Device
+    """
+
+    def __init__(self, device):
+        self.device = device
+        self.url = "/captcha"
+
+    """
+    Get the waiting captchas
+    """
+    def list(self):
+        resp = self.device.action(self.url + "/list", [])
+        return resp
+
+    """
+    Get the base64 captcha image
+    """
+    def get(self, captcha_id):
+        resp = self.device.action(self.url + "/get", (captcha_id,))
+        return resp
+
+    """
+    Solve a captcha
+    """
+    def solve(self, captcha_id, solution):
+        resp = self.device.action(self.url + "/solve", (captcha_id, solution))
+        return resp
+
 
 class Jddevice:
     """
@@ -623,6 +674,7 @@ class Jddevice:
         self.device_type = device_dict["type"]
         self.myjd = jd
         self.linkgrabber = Linkgrabber(self)
+        self.captcha = Captcha(self)
         self.downloads = Downloads(self)
         self.toolbar = Toolbar(self)
         self.downloadcontroller = DownloadController(self)

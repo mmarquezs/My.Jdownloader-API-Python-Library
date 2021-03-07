@@ -58,7 +58,19 @@ device.downloads.query_packages([{
 ```
 # DOCUMENTATION
 
+Sadly currently broken. In any case the documentation was generated with the pydoc comments inside the code itself so checking the code should be enough for now.
+
 http://myjdownloader-api-python-library.readthedocs.org/en/latest/myjdapi.html#module-myjdapi
+
+
+# PROJECTS USING THE LIBRARY
+Here are example of projects currently using the library. If you want to add your project feel free to open a PR so it gets added.
+
+:warning: **WARNING**: I am not endorsing or curating these projects and neither I am responsible nor liable for any problems, losses or damages caused by any of those libraries. Take your own precautions.
+
+* **PyYoutube2JD** - Allows JDownloader users to get all video links from a Youtube account (or playlist). - https://github.com/MarianoDesivo/PyYoutube2JD
+
+
 
 # LICENSE
 The MIT License (MIT)
