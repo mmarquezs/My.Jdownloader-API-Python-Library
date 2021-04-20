@@ -14,11 +14,15 @@ import base64
 import requests
 from Crypto.Cipher import AES
 
+from .exception import (
+    MYJDApiException,
+    MYJDConnectionException,
+    MYJDDecodeException,
+    MYJDDeviceNotFoundException
+)
+
+
 BS = 16
-
-
-class MYJDException(BaseException):
-    pass
 
 
 def PAD(s):
@@ -1003,7 +1007,7 @@ class Myjdapi:
         :param deviceid:
         """
         if not self.is_connected():
-            raise (MYJDException("No connection established\n"))
+            raise (MYJDConnectionException("No connection established\n"))
         if device_id is not None:
             for device in self.__devices:
                 if device["id"] == device_id:
@@ -1012,7 +1016,7 @@ class Myjdapi:
             for device in self.__devices:
                 if device["name"] == device_name:
                     return Jddevice(self, device)
-        raise (MYJDException("Device not found\n"))
+        raise (MYJDDeviceNotFoundException("Device not found\n"))
 
     def request_api(self,
                     path,
@@ -1033,7 +1037,7 @@ class Myjdapi:
             api = self.__api_url
         data = None
         if not self.is_connected() and path != "/my/connect":
-            raise (MYJDException("No connection established\n"))
+            raise (MYJDConnectionException("No connection established\n"))
         if http_method == "GET":
             query = [path + "?"]
             if params is not None:
@@ -1100,7 +1104,7 @@ class Myjdapi:
                 try:
                     error_msg = json.loads(self.__decrypt(self.__device_encryption_token, encrypted_response.text))
                 except json.JSONDecodeError:
-                    raise MYJDException("Failed to decode response: {}", encrypted_response.text)
+                    raise MYJDDecodeException("Failed to decode response: {}", encrypted_response.text)
             msg = "\n\tSOURCE: " + error_msg["src"] + "\n\tTYPE: " + \
                   error_msg["type"] + "\n------\nREQUEST_URL: " + \
                   api + path
@@ -1109,7 +1113,7 @@ class Myjdapi:
             msg += "\n"
             if data is not None:
                 msg += "DATA:\n" + data
-            raise (MYJDException(msg))
+            raise (MYJDApiException.get_exception(error_msg["src"], error_msg["type"], msg))
         if action is None:
             if not self.__server_encryption_token:
                 response = self.__decrypt(self.__login_secret,
