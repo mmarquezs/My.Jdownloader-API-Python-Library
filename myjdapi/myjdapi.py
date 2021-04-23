@@ -15,6 +15,7 @@ import requests
 from Crypto.Cipher import AES
 
 from .exception import (
+    MYJDException,
     MYJDApiException,
     MYJDConnectionException,
     MYJDDecodeException,
