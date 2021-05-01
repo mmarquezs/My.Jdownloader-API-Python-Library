@@ -762,7 +762,6 @@ class Jddevice:
                     connection = conn['conn']
                     api = "http://" + connection["ip"] + ":" + str(
                         connection["port"])
-                    # if self.myjd.request_api("/device/ping", "POST", None, self.__action_url(), api):
                     response = self.myjd.request_api(path, http_action, params,
                                                      action_url, api)
                     if response is not None:
@@ -1067,7 +1066,6 @@ class Myjdapi:
             if params is not None:
                 for param in params:
                     if not isinstance(param, list):
-                        # params_request+=[str(param).replace("'",'\"').replace("True","true").replace("False","false").replace('None',"null")]
                         params_request += [json.dumps(param)]
                     else:
                         params_request += [param]
