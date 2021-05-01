@@ -70,7 +70,7 @@ class MYJDApiException(MYJDException):
     def __init__(self, exception_source, *args, **kwargs):
         """Initialize MyJDownloader API exception."""
         self.source = exception_source.upper()
-        super().__init__(*args, **kwargs)
+        super(MYJDApiException, self).__init__(*args, **kwargs)
 
 
 class MYJDApiCommandNotFoundException(MYJDApiException):
