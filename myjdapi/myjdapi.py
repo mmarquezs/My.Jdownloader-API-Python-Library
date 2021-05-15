@@ -632,6 +632,12 @@ class Downloads:
         resp = self.device.action(self.url + "/forceDownload", params)
         return resp
 
+    def set_dl_location(self, directory, package_ids=[]):
+        params = [directory, package_ids]
+        resp = self.device.action(self.url + "/setDownloadDirectory", params)
+        return resp
+
+
 class Captcha:
     """
     Class that represents the captcha interface of a Device
