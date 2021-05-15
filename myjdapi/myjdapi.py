@@ -745,8 +745,9 @@ class Jddevice:
             response = self.myjd.request_api(path, http_action, params,
                                              action_url)
             if response is None:
-                # My.JDownloader Api failed too.
-                return False
+                # My.JDownloader Api failed too we assume a problem with the connection or the api server
+                # and throw an connection exception.
+                raise (MYJDConnectionException("No connection established\n"))
             else:
                 # My.JDownloader Api worked, lets refresh the direct connections and return
                 # the response.
@@ -781,8 +782,9 @@ class Jddevice:
             response = self.myjd.request_api(path, http_action, params,
                                              action_url)
             if response is None:
-                # My.JDownloader Api failed too.
-                return False
+                # My.JDownloader Api failed too we assume a problem with the connection or the api server
+                # and throw an connection exception.
+                raise (MYJDConnectionException("No connection established\n"))
             # My.JDownloader Api worked, lets refresh the direct connections and return
             # the response.
             self.__refresh_direct_connections()
