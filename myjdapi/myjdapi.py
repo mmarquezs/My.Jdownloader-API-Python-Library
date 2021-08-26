@@ -399,7 +399,7 @@ class Linkgrabber:
         """
         resp = self.device.action("/linkgrabberv2/addLinks", params)
         return resp
-    
+
     def is_collecting(self):
         """
         Boolean status query about the collecting process
@@ -435,12 +435,13 @@ class Linkgrabber:
         resp = self.device.action("/linkgrabberv2/help", http_action="GET")
         return resp
 
-    def rename_link(self):
+    def rename_link(self, link_id, new_name):
         """
-        No idea what parameters i have to pass and/or i don't know what it does.
-        If i find out i will implement it :P
+        Renames files related with link_id
         """
-        pass
+        params = [link_id, new_name]
+        resp = self.device.action(self.url + "/renameLink", params)
+        return resp
 
     def move_links(self):
         """
