@@ -414,12 +414,19 @@ class Linkgrabber:
         """
         pass
 
-    def remove_links(self):
+    def remove_links(self, link_ids = [], package_ids = []):
         """
-        No idea what parameters i have to pass and/or i don't know what it does.
-        If i find out i will implement it :P
+        Remove packages and/or links of the linkgrabber list.
+        Requires at least a link_ids or package_ids list, or both.
+
+        :param link_ids: link UUID's.
+        :type: list of strings
+        :param package_ids: Package UUID's.
+        :type: list of strings.
         """
-        pass
+        params = [link_ids, package_ids]
+        resp = self.device.action(self.url + "/removeLinks", params)
+        return resp
 
     def get_downfolderhistoryselectbase(self):
         """
@@ -638,6 +645,21 @@ class Downloads:
     def set_dl_location(self, directory, package_ids=[]):
         params = [directory, package_ids]
         resp = self.device.action(self.url + "/setDownloadDirectory", params)
+        return resp
+    
+    def remove_links(self, link_ids = [], package_ids = []):
+        """
+        Remove packages and/or links of the downloads list.
+        NOTE: For more specific removal, like deleting the files etc, use the /cleanup api.
+        Requires at least a link_ids or package_ids list, or both.
+
+        :param link_ids: link UUID's.
+        :type: list of strings
+        :param package_ids: Package UUID's.
+        :type: list of strings.
+        """
+        params = [link_ids, package_ids]
+        resp = self.device.action(self.url + "/removeLinks", params)
         return resp
 
 
