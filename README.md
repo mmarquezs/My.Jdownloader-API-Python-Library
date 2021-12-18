@@ -1,6 +1,11 @@
 # My.Jdownloader-API-Python-Library
 This a module for Python 2/3 to interact with My.Jdownloader. This is in a WIP project.You're free to use it following the MIT license and any collaboration is appreciated.
 
+## Common Issues
+:warning: **Are you having problems adding links? Do your links don't get their correct folder or similar?**
+
+99,99% of the times is not an issue of the library, it is due the JDownloader Packagizer check this closed issue to understand why it happens and how you can make it work: [#36](https://github.com/mmarquezs/My.Jdownloader-API-Python-Library/issues/36) 
+
 ## How to use the api?
 **NEW:** Now you can install it using pip from the pypi repo.
 > pip install myjdapi
@@ -61,6 +66,7 @@ device.downloads.query_packages([{
 Sadly currently broken. In any case the documentation was generated with the pydoc comments inside the code itself so checking the code should be enough for now.
 
 http://myjdownloader-api-python-library.readthedocs.org/en/latest/myjdapi.html#module-myjdapi
+
 
 
 # PROJECTS USING THE LIBRARY
