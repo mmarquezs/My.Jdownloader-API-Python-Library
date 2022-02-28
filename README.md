@@ -1,6 +1,10 @@
 # My.Jdownloader-API-Python-Library
 This a module for Python 2/3 to interact with My.Jdownloader. This is in a WIP project.You're free to use it following the MIT license and any collaboration is appreciated.
 
+## Is this dead?
+No, it's true that I don't actively develop it, as in there are still functions not implemented. But if you find something missing, feel free to open an issue and I will take a look asap or even better, if you know how to add it feel free to do it and do a PR and I will merge it as asap once I have test it.
+Basically I develop it as in on demand kind of thing, if something is broken or something new is needed I take a look at it and try to fix it or add it.
+
 ## Common Issues
 :warning: **Are you having problems adding links? Are your links not getting their correct download folder or similar?**
 
