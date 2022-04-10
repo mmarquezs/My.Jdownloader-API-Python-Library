@@ -92,6 +92,24 @@ class System:
         return resp
 
 
+class Jd:
+    """
+    Class that represents the jd-functionality of a Device
+    """
+
+    def __init__(self, device):
+        self.device = device
+        self.url = '/jd'
+
+    def get_core_revision(self):
+        """
+
+        :return:
+        """
+        resp = self.device.action(self.url + "/getCoreRevision")
+        return resp
+
+
 class Update:
     """
     Class that represents the update-functionality of a Device
@@ -715,6 +733,7 @@ class Jddevice:
         self.toolbar = Toolbar(self)
         self.downloadcontroller = DownloadController(self)
         self.update = Update(self)
+        self.jd = Jd(self)
         self.system = System(self)
         self.__direct_connection_info = None
         self.__refresh_direct_connections()
