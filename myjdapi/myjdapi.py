@@ -22,7 +22,6 @@ from .exception import (
     MYJDDeviceNotFoundException
 )
 
-
 BS = 16
 
 
@@ -370,8 +369,18 @@ class Linkgrabber:
         resp = self.device.action(self.url + "/setPriority", params)
         return resp
 
-    def set_enabled(self, enabled, link_ids=[], package_ids=[]):
-        params = [enabled, link_ids, package_ids]
+    def set_enabled(self, enable, link_ids, package_ids):
+        """
+        Enable or disable packages.
+
+        :param enable: Enable or disable package.
+        :type: boolean
+        :param link_ids: Links UUID.
+        :type: list of strings
+        :param package_ids: Packages UUID.
+        :type: list of strings.
+        """
+        params = [enable, link_ids, package_ids]
         resp = self.device.action(self.url + "/setEnabled", params)
         return resp
 
@@ -422,7 +431,7 @@ class Linkgrabber:
         """
         Boolean status query about the collecting process
         """
-        resp = self.device.action(self.url+"/isCollecting")
+        resp = self.device.action(self.url + "/isCollecting")
         return resp
 
     def get_childrenchanged(self):
@@ -432,7 +441,7 @@ class Linkgrabber:
         """
         pass
 
-    def remove_links(self, link_ids = [], package_ids = []):
+    def remove_links(self, link_ids=[], package_ids=[]):
         """
         Remove packages and/or links of the linkgrabber list.
         Requires at least a link_ids or package_ids list, or both.
@@ -475,6 +484,11 @@ class Linkgrabber:
         """
         pass
 
+    def move_to_new_package(self, link_ids, package_ids, new_pkg_name, download_path):
+        params = link_ids, package_ids, new_pkg_name, download_path
+        resp = self.device.action(self.url + "/movetoNewPackage", params)
+        return resp
+
     def set_variant(self):
         """
         No idea what parameters i have to pass and/or i don't know what it does.
@@ -483,11 +497,8 @@ class Linkgrabber:
         pass
 
     def get_package_count(self):
-        """
-        No idea what parameters i have to pass and/or i don't know what it does.
-        If i find out i will implement it :P
-        """
-        pass
+        resp = self.device.action("/linkgrabberv2/getPackageCount")
+        return resp
 
     def rename_package(self, package_id, new_name):
         """
@@ -497,24 +508,23 @@ class Linkgrabber:
         resp = self.device.action(self.url + "/renamePackage", params)
         return resp
 
-
     def query_packages(self,
                        params=[{
-                           "availableOfflineCount":True,
-                           "availableOnlineCount":True,
-                           "availableTempUnknownCount":True,
-                           "availableUnknownCount":True,
-                           "bytesTotal":True,
-                           "childCount":True,
-                           "comment":True,
-                           "enabled":True,
-                           "hosts":True,
-                           "maxResults":-1,
-                           "packageUUIDs":[],
-                           "priority":True,
-                           "saveTo":True,
-                           "startAt":0,
-                           "status":True
+                           "availableOfflineCount": True,
+                           "availableOnlineCount": True,
+                           "availableTempUnknownCount": True,
+                           "availableUnknownCount": True,
+                           "bytesTotal": True,
+                           "childCount": True,
+                           "comment": True,
+                           "enabled": True,
+                           "hosts": True,
+                           "maxResults": -1,
+                           "packageUUIDs": [],
+                           "priority": True,
+                           "saveTo": True,
+                           "startAt": 0,
+                           "status": True
                        }]):
         resp = self.device.action(self.url + "/queryPackages", params)
         return resp
@@ -650,8 +660,18 @@ class Downloads:
         resp = self.device.action(self.url + "/cleanup", params)
         return resp
 
-    def set_enabled(self, enabled, link_ids=[], package_ids=[]):
-        params = [enabled, link_ids, package_ids]
+    def set_enabled(self, enable, link_ids, package_ids):
+        """
+        Enable or disable packages.
+
+        :param enable: Enable or disable package.
+        :type: boolean
+        :param link_ids: Links UUID.
+        :type: list of strings
+        :param package_ids: Packages UUID.
+        :type: list of strings.
+        """
+        params = [enable, link_ids, package_ids]
         resp = self.device.action(self.url + "/setEnabled", params)
         return resp
 
@@ -664,8 +684,8 @@ class Downloads:
         params = [directory, package_ids]
         resp = self.device.action(self.url + "/setDownloadDirectory", params)
         return resp
-    
-    def remove_links(self, link_ids = [], package_ids = []):
+
+    def remove_links(self, link_ids=[], package_ids=[]):
         """
         Remove packages and/or links of the downloads list.
         NOTE: For more specific removal, like deleting the files etc, use the /cleanup api.
@@ -678,6 +698,16 @@ class Downloads:
         """
         params = [link_ids, package_ids]
         resp = self.device.action(self.url + "/removeLinks", params)
+        return resp
+
+    def reset_links(self, link_ids, package_ids):
+        params = [link_ids, package_ids]
+        resp = self.device.action(self.url + "/resetLinks", params)
+        return resp
+
+    def move_to_new_package(self, link_ids, package_ids, new_pkg_name, download_path):
+        params = link_ids, package_ids, new_pkg_name, download_path
+        resp = self.device.action(self.url + "/movetoNewPackage", params)
         return resp
 
 
@@ -693,6 +723,7 @@ class Captcha:
     """
     Get the waiting captchas
     """
+
     def list(self):
         resp = self.device.action(self.url + "/list", [])
         return resp
@@ -700,6 +731,7 @@ class Captcha:
     """
     Get the base64 captcha image
     """
+
     def get(self, captcha_id):
         resp = self.device.action(self.url + "/get", (captcha_id,))
         return resp
@@ -707,6 +739,7 @@ class Captcha:
     """
     Solve a captcha
     """
+
     def solve(self, captcha_id, solution):
         resp = self.device.action(self.url + "/solve", (captcha_id, solution))
         return resp
@@ -1148,7 +1181,6 @@ class Myjdapi:
             except requests.exceptions.RequestException as e:
                 return None
         if encrypted_response.status_code != 200:
-
             try:
                 error_msg = json.loads(encrypted_response.text)
             except json.JSONDecodeError:
