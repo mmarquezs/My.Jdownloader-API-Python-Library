@@ -90,6 +90,14 @@ class System:
         resp = self.device.action(self.url + "/standbyOS")
         return resp
 
+    def get_storage_info(self):
+        """
+
+        :return:
+        """
+        resp = self.device.action(self.url + "/getStorageInfos?path")
+        return resp
+
 
 class Jd:
     """
@@ -145,6 +153,51 @@ class Update:
     def update_available(self):
         self.run_update_check()
         resp = self.is_update_available()
+        return resp
+
+    
+class Config:
+    """
+    Class that represents the Config of a Device
+    """
+
+    def __init__(self, device):
+        self.device = device
+        self.url = '/config'
+
+    def list(self):
+        """
+        :return:  List<AdvancedConfigAPIEntry>
+        """
+        resp = self.device.action(self.url + "/list")
+        return resp
+
+    def get(self, interface_name, storage, key):
+        """
+        :param interfaceName: a valid interface name from List<AdvancedConfigAPIEntry>
+        :type: str:
+        :param storage: 'null' to use default or 'cfg/' + interfaceName
+        :type: str:
+        :param key: a valid key from from List<AdvancedConfigAPIEntry>
+        :type: str:
+        """
+        params = [interface_name, storage, key]
+        resp = self.device.action(self.url + "/get", params)
+        return resp
+
+    def set(self, interface_name, storage, key, value):
+        """
+        :param interfaceName:  a valid interface name from List<AdvancedConfigAPIEntry>
+        :type: str:
+        :param storage: 'null' to use default or 'cfg/' + interfaceName
+        :type: str:
+        :param key: a valid key from from List<AdvancedConfigAPIEntry>
+        :type: str:
+        :param value: a valid value for the given key (see type value from List<AdvancedConfigAPIEntry>)
+        :type: Object:
+        """
+        params = [interface_name, storage, key, value]
+        resp = self.device.action(self.url + "/set", params)
         return resp
 
 
@@ -760,6 +813,7 @@ class Jddevice:
         self.device_id = device_dict["id"]
         self.device_type = device_dict["type"]
         self.myjd = jd
+        self.config = Config(self)
         self.linkgrabber = Linkgrabber(self)
         self.captcha = Captcha(self)
         self.downloads = Downloads(self)
