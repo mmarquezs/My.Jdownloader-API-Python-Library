@@ -639,23 +639,27 @@ class Downloads:
 
     def query_links(self,
                     params=[{
+                        "addedDate": True,
+                        "bytesLoaded": True,
                         "bytesTotal": True,
                         "comment": True,
-                        "status": True,
                         "enabled": True,
-                        "maxResults": -1,
-                        "startAt": 0,
-                        "packageUUIDs": [],
-                        "host": True,
-                        "url": True,
-                        "bytesloaded": True,
-                        "speed": True,
                         "eta": True,
+                        "extractionStatus": True,
                         "finished": True,
+                        "finishedDate": True,
+                        "host": True,
+                        "jobUUIDs": [],
+                        "maxResults": -1,
+                        "packageUUIDs": [],
+                        "password": True,
                         "priority": True,
                         "running": True,
                         "skipped": True,
-                        "extractionStatus": True
+                        "speed": True,
+                        "startAt": 0,
+                        "status": True,
+                        "url": True
                     }]):
         """
         Get the links in the download list
@@ -667,19 +671,20 @@ class Downloads:
                        params=[{
                            "bytesLoaded": True,
                            "bytesTotal": True,
+                           "childCount": True,
                            "comment": True,
                            "enabled": True,
                            "eta": True,
-                           "priority": True,
                            "finished": True,
-                           "running": True,
-                           "speed": True,
-                           "status": True,
-                           "childCount": True,
                            "hosts": True,
-                           "saveTo": True,
                            "maxResults": -1,
+                           "packageUUIDs": [],
+                           "priority": True,
+                           "running": True,
+                           "saveTo": True,
+                           "speed": True,
                            "startAt": 0,
+                           "status": True
                        }]):
         """
         Get the packages in the download list
