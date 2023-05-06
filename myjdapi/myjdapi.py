@@ -155,7 +155,6 @@ class Update:
         resp = self.is_update_available()
         return resp
 
-    
 class Config:
     """
     Class that represents the Config of a Device
@@ -165,11 +164,21 @@ class Config:
         self.device = device
         self.url = '/config'
 
-    def list(self):
+    def list(self, params=None):
         """
         :return:  List<AdvancedConfigAPIEntry>
         """
-        resp = self.device.action(self.url + "/list")
+        if params != None:
+            resp = self.device.action(self.url + "/list")
+            return resp
+        resp = self.device.action(self.url + "/list", params)
+        return resp
+
+    def listEnum(self, type):
+        """
+        :return:  List<AdvancedConfigAPIEntry>
+        """
+        resp = self.device.action(self.url + "/listEnum", params=[type])
         return resp
 
     def get(self, interface_name, storage, key):
@@ -183,6 +192,62 @@ class Config:
         """
         params = [interface_name, storage, key]
         resp = self.device.action(self.url + "/get", params)
+        return resp
+
+    def getDefault(self, interfaceName, storage, key):
+        """
+        :param interfaceName:  a valid interface name from List<AdvancedConfigAPIEntry>
+        :type: str:
+        :param storage: 'null' to use default or 'cfg/' + interfaceName
+        :type: str:
+        :param key: a valid key from from List<AdvancedConfigAPIEntry>
+        :type: str:
+        """
+        params = [interfaceName, storage, key]
+        resp = self.device.action(self.url + "/getDefault", params)
+        return resp
+
+    def query(self,
+              params=[{
+                "configInterface": "",
+                "defaultValues": True,
+                "description": True,
+                "enumInfo": True,
+                "includeExtensions": True,
+                "pattern": "",
+                "values": True
+              }]):
+        """
+        :param params: A dictionary with options. The default dictionary is
+        configured so it returns you all the downloads with all details, but you
+        can put your own with your options. All the options available are this
+        ones:
+        {
+        "configInterface"  : "",
+        "defaultValues"    : True,
+        "description"      : True,
+        "enumInfo"         : True,
+        "includeExtensions": True,
+        "pattern"          : "",
+        "values"           : ""
+        }
+        :type: Dictionary
+        :rtype: List of dictionaries of this style, with more or less detail based on your options.
+        """
+        resp = self.device.action(self.url + "/query", params)
+        return resp
+
+    def reset(self, interfaceName, storage, key):
+        """
+        :param interfaceName:  a valid interface name from List<AdvancedConfigAPIEntry>
+        :type: str:
+        :param storage: 'null' to use default or 'cfg/' + interfaceName
+        :type: str:
+        :param key: a valid key from from List<AdvancedConfigAPIEntry>
+        :type: str:
+        """
+        params = [interfaceName, storage, key]
+        resp = self.device.action(self.url + "/reset", params)
         return resp
 
     def set(self, interface_name, storage, key, value):
@@ -262,6 +327,80 @@ class DownloadController:
         resp = self.device.action(self.url + "/getCurrentState")
         return resp
 
+class Extension:
+    def __init__(self, device):
+        self.device = device
+        self.url = "/extensions"
+
+    def list(self,
+             params=[{
+                "configInterface": True,
+                "description": True,
+                "enabled": True,
+                "iconKey": True,
+                "name": True,
+                "pattern" : "",
+                "installed": True
+             }]):
+        """
+        :param params: A dictionary with options. The default dictionary is
+        configured so it returns you all the downloads with all details, but you
+        can put your own with your options. All the options available are this
+        ones:
+        {
+        "configInterface"  : True,
+        "description"      : True,
+        "enabled"          : True,
+        "iconKey"          : True,
+        "name"             : True,
+        "pattern"          : "",
+        "installed"        : True
+        }
+        :type: Dictionary
+        :rtype: List of dictionaries of this style, with more or less detail based on your options.
+        """
+        resp = self.device.action(self.url + "/list", params=params)
+        return resp
+
+    def install(self, id):
+        resp = self.device.action(self.url + "/install", params=[id])
+        return resp
+
+    def isInstalled(self, id):
+        resp = self.device.action(self.url + "/isInstalled", params=[id])
+        return resp
+
+    def isEnabled(self, id):
+        resp = self.device.action(self.url + "/isEnabled", params=[id])
+        return resp
+
+    def setEnabled(self, id, enabled):
+        resp = self.device.action(self.url + "/setEnabled", params=[id, enabled])
+        return resp
+
+class Dialog:
+    """
+    Class that represents the dialogs on myJD
+    """
+    def __init__(self, device):
+        self.device = device
+        self.url = "/dialogs"
+
+    def answer(self, id, data):
+        resp = self.device.action(self.url + "/answer", params=[id, data])
+        return resp
+
+    def get(self, id, icon=True, properties=True):
+        resp = self.device.action(self.url + "/get", params=[id, icon, properties])
+        return resp
+
+    def getTypeInfo(self, dialogType):
+        resp = self.device.action(self.url + "/getTypeInfo", params=[dialogType])
+        return resp
+
+    def list(self):
+        resp = self.device.action(self.url + "/list")
+        return resp
 
 class Linkgrabber:
     """
@@ -824,6 +963,8 @@ class Jddevice:
         self.downloads = Downloads(self)
         self.toolbar = Toolbar(self)
         self.downloadcontroller = DownloadController(self)
+        self.extensions = Extension(self)
+        self.dialogs = Dialog(self)
         self.update = Update(self)
         self.jd = Jd(self)
         self.system = System(self)
