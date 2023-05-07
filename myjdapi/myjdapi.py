@@ -1350,10 +1350,12 @@ class Myjdapi:
             params_request = []
             if params is not None:
                 for param in params:
-                    if not isinstance(param, list):
+                    if isinstance(param, str) or isinstance(param, list):
+                        params_request += [param]
+                    elif isinstance(param, dict) or isinstance(param, bool):
                         params_request += [json.dumps(param)]
                     else:
-                        params_request += [param]
+                        params_request += [str(param)]
             params_request = {
                 "apiVer": self.__api_version,
                 "url": path,
