@@ -176,7 +176,7 @@ class Config:
 
     def listEnum(self, type):
         """
-        :return:  List<AdvancedConfigAPIEntry>
+        :return:  List<EnumOption>
         """
         resp = self.device.action(self.url + "/listEnum", params=[type])
         return resp
@@ -219,7 +219,7 @@ class Config:
               }]):
         """
         :param params: A dictionary with options. The default dictionary is
-        configured so it returns you all the downloads with all details, but you
+        configured so it returns you all config API entries with all details, but you
         can put your own with your options. All the options available are this
         ones:
         {
@@ -344,7 +344,7 @@ class Extension:
              }]):
         """
         :param params: A dictionary with options. The default dictionary is
-        configured so it returns you all the downloads with all details, but you
+        configured so it returns you all available extensions, but you
         can put your own with your options. All the options available are this
         ones:
         {
