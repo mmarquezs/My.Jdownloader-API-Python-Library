@@ -11,7 +11,7 @@ it possible to use the local api without any interaction with My.Downloader at a
 
 ## Implemetation
 
-In myjdapi all connetions will be managed by an instance of Myjdapi. To use myjdapi locally Myjdapi needs consequently be extended to allow local connextions.
+In myjdapi all connetions will be managed by an instance of Myjdapi. To use myjdapi locally Myjdapi needs to be extended to allow local connextions.
 
 `Myjdapi().connect_device(ip, port, _type='jd', username=None, password=None, timeout=None)` will create 
 a local connection to a given device and it will make all modifications to the myjdapi instance to support 
