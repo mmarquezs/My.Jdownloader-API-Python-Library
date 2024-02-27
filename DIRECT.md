@@ -2,14 +2,14 @@
 
 This is an extension of myjdapi to allow a direct device access without My.JDownloader.
 
-# Theory of operation
+## Theory of operation
 
 My.JDowloader manages JDownloader devices and myjdapi provides a python interface to access them.
 If possible My.JDowloader will push a direct connection to myjdapi which will be used consequently.
 If enabled this JDownloader api will be available locally. The direct access modification will make 
 it possible to use the local api without any interaction with My.Downloader at all.
 
-# Implemetation
+## Implemetation
 
 In myjdapi all connetions will be managed by an instance of Myjdapi. To use myjdapi locally Myjdapi needs consequently be extended to allow local connextions.
 
@@ -22,7 +22,7 @@ Even so the interface supports a user name and password it is not implemented ye
 The call to connect_device() will ping the device to make sure it exists and it will create a device with the name given by the ip-parameter and the id 'direct'.
 A direct device connection has the status connected but it has no session id since the session id is supported be My.Downloader only.
 
-# Usage
+## Usage
 
 After myjdapi has established the connection the device can be querried as usually be calling:
 
