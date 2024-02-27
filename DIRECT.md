@@ -40,5 +40,5 @@ device = jd.get_device(host)
 device = jd.get_device(device_id="direct")
 ```
 
-Once the connection is to the local device established myjdapi will not connect to My.JDownloader any more. 
-The connection is is permanent and will not be refreshed.
+Once the connection to the local device is established myjdapi will not connect to My.JDownloader any more. 
+The connection is permanent and will not be refreshed any more.
