@@ -975,13 +975,9 @@ class Jddevice:
         self.__direct_connection_consecutive_failures = 0
 
     def __refresh_direct_connections(self):
-        response = self.myjd.request_api("/device/getDirectConnectionInfos",
-                                         "POST", None, self.__action_url())
-        if response is not None \
-                and 'data' in response \
-                and 'infos' in response["data"] \
-                and len(response["data"]["infos"]) != 0:
-            self.__update_direct_connections(response["data"]["infos"])
+        infos=self.myjd.get_direct_Connection_infos(self.__action_url())
+        if infos:
+            self.__update_direct_connections(infos)
 
     def __update_direct_connections(self, direct_info):
         """
@@ -1074,7 +1070,10 @@ class Jddevice:
             return response['data']
 
     def __action_url(self):
-        return "/t_" + self.myjd.get_session_token() + "_" + self.device_id
+        if self.myjd.get_session_token():
+            return "/t_" + self.myjd.get_session_token() + "_" + self.device_id
+        else:
+            return None
 
 
 class Myjdapi:
@@ -1091,6 +1090,7 @@ class Myjdapi:
         self.__request_id = int(time.time() * 1000)
         self.__api_url = "https://api.jdownloader.org"
         self.__app_key = "http://git.io/vmcsk"
+        self.__content_type = "application/aesjson-jd; charset=utf-8"
         self.__api_version = 1
         self.__devices = None
         self.__login_secret = None
@@ -1100,6 +1100,8 @@ class Myjdapi:
         self.__server_encryption_token = None
         self.__device_encryption_token = None
         self.__connected = False
+        self.__dict_as_str = True
+        self.__timeout=3
 
     def get_session_token(self):
         return self.__session_token
@@ -1137,6 +1139,8 @@ class Myjdapi:
         Updates the server_encryption_token and device_encryption_token
 
         """
+        if self.__connected and not self.__session_token:
+            return
         if self.__server_encryption_token is None:
             old_token = self.__login_secret
         else:
@@ -1166,11 +1170,14 @@ class Myjdapi:
         :param secret_token:
         :param data:
         """
-        init_vector = secret_token[:len(secret_token) // 2]
-        key = secret_token[len(secret_token) // 2:]
-        decryptor = AES.new(key, AES.MODE_CBC, init_vector)
-        decrypted_data = UNPAD(decryptor.decrypt(base64.b64decode(data)))
-        return decrypted_data
+        if secret_token:
+            init_vector = secret_token[:len(secret_token) // 2]
+            key = secret_token[len(secret_token) // 2:]
+            decryptor = AES.new(key, AES.MODE_CBC, init_vector)
+            decrypted_data = UNPAD(decryptor.decrypt(base64.b64decode(data)))
+            return decrypted_data
+        else:
+            return data.encode('utf-8')
 
     def __encrypt(self, secret_token, data):
         """
@@ -1179,12 +1186,15 @@ class Myjdapi:
         :param secret_token:
         :param data:
         """
-        data = PAD(data.encode('utf-8'))
-        init_vector = secret_token[:len(secret_token) // 2]
-        key = secret_token[len(secret_token) // 2:]
-        encryptor = AES.new(key, AES.MODE_CBC, init_vector)
-        encrypted_data = base64.b64encode(encryptor.encrypt(data))
-        return encrypted_data.decode('utf-8')
+        if secret_token:
+            data = PAD(data.encode('utf-8'))
+            init_vector = secret_token[:len(secret_token) // 2]
+            key = secret_token[len(secret_token) // 2:]
+            encryptor = AES.new(key, AES.MODE_CBC, init_vector)
+            encrypted_data = base64.b64encode(encryptor.encrypt(data))
+            return encrypted_data.decode('utf-8')
+        else:
+            return data
 
     def update_request_id(self):
         """
@@ -1208,6 +1218,7 @@ class Myjdapi:
         self.__server_encryption_token = None
         self.__device_encryption_token = None
         self.__devices = None
+        self.__device_connection = None
         self.__connected = False
 
         self.__login_secret = self.__secret_create(email, password, "server")
@@ -1223,6 +1234,45 @@ class Myjdapi:
         self.update_devices()
         return response
 
+    def connect_device(self, ip, port, _type='jd', username=None, password=None, timeout=None):
+        """Establish a direct connection to api of a device
+
+        :param ip: ip of the divice
+        :param port: port of the divice
+        :returns: boolean -- True if succesful, False if there was any error.
+
+        """
+        self.update_request_id()
+        self.__login_secret = None
+        self.__device_secret = None
+        self.__session_token = None
+        self.__regain_token = None
+        self.__server_encryption_token = None
+        self.__device_encryption_token = None
+        self.__device_connection={"ip":ip,"port":port,"type":_type}
+        self.__dict_as_str = False
+        self.__devices = [{
+            'name': ip,
+            'id': 'direct',
+            'type': 'jd'
+            }]
+        self.__api_url="http://" + ip + ":" + str(port)
+        self.__content_type = "application/json; charset=utf-8"
+        self.__login_secret = None
+        if username and password:
+            self.__device_secret = self.__secret_create(username, password, "device")
+        else:
+            self.__device_secret = None
+        if not (timeout is None):
+            self.__timeout=timeout
+        self.__connected = True
+        response = self.request_api("/device/ping", "GET", [])['data']
+        self.__connected = response
+        self.update_request_id()
+        self.__session_token = None
+        self.__regain_token = None
+        return response
+
     def reconnect(self):
         """
         Reestablish connection to API.
@@ -1230,6 +1280,8 @@ class Myjdapi:
         :returns: boolean -- True if successful, False if there was any error.
 
         """
+        if self.__connected and (not self.__session_token or not self.__regain_token):
+            return True
         response = self.request_api("/my/reconnect", "GET",
                                     [("sessiontoken", self.__session_token),
                                      ("regaintoken", self.__regain_token)])
@@ -1246,7 +1298,10 @@ class Myjdapi:
         :returns: boolean -- True if successful, False if there was any error.
 
         """
-        response = self.request_api("/my/disconnect", "GET",
+        if self.__connected and not self.__session_token:
+            response=True
+        else:
+            response = self.request_api("/my/disconnect", "GET",
                                     [("sessiontoken", self.__session_token)])
         self.update_request_id()
         self.__login_secret = None
@@ -1265,6 +1320,8 @@ class Myjdapi:
 
         :returns: boolean -- True if successful, False if there was any error.
         """
+        if self.__connected and not self.__session_token:
+            return
         response = self.request_api("/my/listdevices", "GET",
                                     [("sessiontoken", self.__session_token)])
         self.update_request_id()
@@ -1303,6 +1360,20 @@ class Myjdapi:
                     return Jddevice(self, device)
         raise (MYJDDeviceNotFoundException("Device not found\n"))
 
+    def get_direct_Connection_infos(self,action_url):
+        if self.__connected and not self.__session_token:
+            return [self.__device_connection]
+        else:
+            response = self.request_api("/device/getDirectConnectionInfos",
+                                         "POST", None, action_url)
+            if response is not None \
+                and 'data' in response \
+                and 'infos' in response["data"] \
+                and len(response["data"]["infos"]) != 0:
+                return response["data"]["infos"]
+            else:
+                return None
+
     def request_api(self,
                     path,
                     http_method="GET",
@@ -1332,27 +1403,28 @@ class Myjdapi:
                     else:
                         query += ["&%s=%s" % (param[0], param[1])]
             query += ["rid=" + str(self.__request_id)]
-            if self.__server_encryption_token is None:
-                query += [
-                    "signature=" \
-                    + str(self.__signature_create(self.__login_secret,
-                                                  query[0] + "&".join(query[1:])))
-                ]
-            else:
-                query += [
-                    "signature=" \
-                    + str(self.__signature_create(self.__server_encryption_token,
-                                                  query[0] + "&".join(query[1:])))
-                ]
+            if not (self.__connected and not self.__session_token):
+                if self.__server_encryption_token is None:
+                    query += [
+                        "signature=" \
+                        + str(self.__signature_create(self.__login_secret,
+                                                      query[0] + "&".join(query[1:])))
+                    ]
+                else:
+                    query += [
+                        "signature=" \
+                        + str(self.__signature_create(self.__server_encryption_token,
+                                                      query[0] + "&".join(query[1:])))
+                    ]
             query = query[0] + "&".join(query[1:])
-            encrypted_response = requests.get(api + query, timeout=3)
+            encrypted_response = requests.get(api + query, timeout=self.__timeout)
         else:
             params_request = []
             if params is not None:
                 for param in params:
-                    if isinstance(param, str) or isinstance(param, list):
+                    if (isinstance(param, dict) and not self.__dict_as_str) or isinstance(param, str) or isinstance(param, list):
                         params_request += [param]
-                    elif isinstance(param, dict) or isinstance(param, bool):
+                    elif (isinstance(param, dict) and self.__dict_as_str) or isinstance(param, bool):
                         params_request += [json.dumps(param)]
                     else:
                         params_request += [str(param)]
@@ -1376,10 +1448,10 @@ class Myjdapi:
                 encrypted_response = requests.post(
                     request_url,
                     headers={
-                        "Content-Type": "application/aesjson-jd; charset=utf-8"
+                        "Content-Type": self.__content_type
                     },
                     data=encrypted_data,
-                    timeout=3)
+                    timeout=self.__timeout)
             except requests.exceptions.RequestException as e:
                 return None
         if encrypted_response.status_code != 200:
@@ -1410,8 +1482,9 @@ class Myjdapi:
             response = self.__decrypt(self.__device_encryption_token,
                                       encrypted_response.text)
         jsondata = json.loads(response.decode('utf-8'))
-        if jsondata['rid'] != self.__request_id:
-            self.update_request_id()
-            return None
+        if 'rid' in jsondata.keys():
+            if jsondata['rid'] != self.__request_id:
+                self.update_request_id()
+                return None
         self.update_request_id()
         return jsondata
