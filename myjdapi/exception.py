@@ -31,7 +31,7 @@ from .const import (
 )
 
 
-class MYJDException(BaseException):
+class MYJDException(Exception):
     """Base MyJDownloader Exception."""
 
     pass
