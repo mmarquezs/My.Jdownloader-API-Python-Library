@@ -58,3 +58,19 @@ target/
 
 # PyCharm
 .idea/
+
+# Venv
+venv/pyvenv.cfg
+venv/Scripts/activate
+venv/Scripts/activate.bat
+venv/Scripts/Activate.ps1
+venv/Scripts/deactivate.bat
+venv/Scripts/normalizer.exe
+venv/Scripts/pip.exe
+venv/Scripts/pip3.12.exe
+venv/Scripts/pip3.exe
+venv/Scripts/python.exe
+venv/Scripts/pythonw.exe
+
+# Local test file (with credentials)
+test.py
