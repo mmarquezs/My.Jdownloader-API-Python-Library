@@ -966,7 +966,6 @@ class Jddevice:
         self.extensions = Extension(self)
         self.dialogs = Dialog(self)
         self.update = Update(self)
-        self.jd = Jd(self)
         self.system = System(self)
         self.__direct_connection_info = None
         self.__refresh_direct_connections()
@@ -975,9 +974,15 @@ class Jddevice:
         self.__direct_connection_consecutive_failures = 0
 
     def __refresh_direct_connections(self):
-        infos=self.myjd.get_direct_Connection_infos(self.__action_url())
-        if infos:
-            self.__update_direct_connections(infos)
+        if self.myjd.get_connection_type() == "remoteapi":
+            return
+        response = self.myjd.request_api("/device/getDirectConnectionInfos",
+                                         "POST", None, self.__action_url())
+        if response is not None \
+                and 'data' in response \
+                and 'infos' in response["data"] \
+                and len(response["data"]["infos"]) != 0:
+            self.__update_direct_connections(response["data"]["infos"])
 
     def __update_direct_connections(self, direct_info):
         """
@@ -1017,7 +1022,11 @@ class Jddevice:
         /example?param1=ex&param2=ex2 [("param1","ex"),("param2","ex2")]
         :param postparams: List of Params that are send in the post.
         """
-        action_url = self.__action_url()
+        
+        if self.myjd.get_connection_type() == "remoteapi":
+            action_url = None
+        else:
+            action_url = self.__action_url()
         if not self.__direct_connection_enabled or self.__direct_connection_info is None \
                 or time.time() < self.__direct_connection_cooldown:
             # No direct connection available, we use My.JDownloader api.
@@ -1070,11 +1079,7 @@ class Jddevice:
             return response['data']
 
     def __action_url(self):
-        if self.myjd.get_session_token():
-            return "/t_" + self.myjd.get_session_token() + "_" + self.device_id
-        else:
-            return None
-
+        return "/t_" + self.myjd.get_session_token() + "_" + self.device_id
 
 class Myjdapi:
     """
@@ -1100,8 +1105,8 @@ class Myjdapi:
         self.__server_encryption_token = None
         self.__device_encryption_token = None
         self.__connected = False
-        self.__dict_as_str = True
-        self.__timeout=3
+        self.__timeout = 3
+        self.__connection_type = "myjd" # myjd -> MyJdownloader API, remoteapi -> Deprecated Direct RemoteAPI connection.
 
     def get_session_token(self):
         return self.__session_token
@@ -1139,7 +1144,7 @@ class Myjdapi:
         Updates the server_encryption_token and device_encryption_token
 
         """
-        if self.__connected and not self.__session_token:
+        if self.__connection_type == "remoteapi":
             return
         if self.__server_encryption_token is None:
             old_token = self.__login_secret
@@ -1170,14 +1175,13 @@ class Myjdapi:
         :param secret_token:
         :param data:
         """
-        if secret_token:
-            init_vector = secret_token[:len(secret_token) // 2]
-            key = secret_token[len(secret_token) // 2:]
-            decryptor = AES.new(key, AES.MODE_CBC, init_vector)
-            decrypted_data = UNPAD(decryptor.decrypt(base64.b64decode(data)))
-            return decrypted_data
-        else:
+        if self.__connection_type == "remoteapi":
             return data.encode('utf-8')
+        init_vector = secret_token[:len(secret_token) // 2]
+        key = secret_token[len(secret_token) // 2:]
+        decryptor = AES.new(key, AES.MODE_CBC, init_vector)
+        decrypted_data = UNPAD(decryptor.decrypt(base64.b64decode(data)))
+        return decrypted_data
 
     def __encrypt(self, secret_token, data):
         """
@@ -1186,15 +1190,14 @@ class Myjdapi:
         :param secret_token:
         :param data:
         """
-        if secret_token:
-            data = PAD(data.encode('utf-8'))
-            init_vector = secret_token[:len(secret_token) // 2]
-            key = secret_token[len(secret_token) // 2:]
-            encryptor = AES.new(key, AES.MODE_CBC, init_vector)
-            encrypted_data = base64.b64encode(encryptor.encrypt(data))
-            return encrypted_data.decode('utf-8')
-        else:
+        if self.__connection_type == "remoteapi":
             return data
+        data = PAD(data.encode('utf-8'))
+        init_vector = secret_token[:len(secret_token) // 2]
+        key = secret_token[len(secret_token) // 2:]
+        encryptor = AES.new(key, AES.MODE_CBC, init_vector)
+        encrypted_data = base64.b64encode(encryptor.encrypt(data))
+        return encrypted_data.decode('utf-8')
 
     def update_request_id(self):
         """
@@ -1218,8 +1221,8 @@ class Myjdapi:
         self.__server_encryption_token = None
         self.__device_encryption_token = None
         self.__devices = None
-        self.__device_connection = None
         self.__connected = False
+        self.__connection_type = "myjd"
 
         self.__login_secret = self.__secret_create(email, password, "server")
         self.__device_secret = self.__secret_create(email, password, "device")
@@ -1234,43 +1237,40 @@ class Myjdapi:
         self.update_devices()
         return response
 
-    def connect_device(self, ip, port, _type='jd', username=None, password=None, timeout=None):
-        """Establish a direct connection to api of a device
+    def direct_connect(self, ip, port=3128, timeout=3):
+        """
+        Direct connect to a single device/app instance using the deprecated RemoteAPI.
+        This RemoteAPI has to be enabled on JDownloader beforehand.
+        Beaware this connection is not authenticated nor encrypted, so do not enable
+        it publicly.
 
-        :param ip: ip of the divice
-        :param port: port of the divice
+        :param ip: ip of the device
+        :param port: port of the device, 3128 by default.
+        :param port: optional timeout of the connection, 3 seconds by default.
         :returns: boolean -- True if succesful, False if there was any error.
 
         """
         self.update_request_id()
+        # This direct connection doesn't use auth nor encryption so all secrets and tokens are invalid.
         self.__login_secret = None
         self.__device_secret = None
         self.__session_token = None
         self.__regain_token = None
         self.__server_encryption_token = None
         self.__device_encryption_token = None
-        self.__device_connection={"ip":ip,"port":port,"type":_type}
-        self.__dict_as_str = False
         self.__devices = [{
             'name': ip,
             'id': 'direct',
             'type': 'jd'
             }]
+        self.__connection_type = "remoteapi"
         self.__api_url="http://" + ip + ":" + str(port)
         self.__content_type = "application/json; charset=utf-8"
-        self.__login_secret = None
-        if username and password:
-            self.__device_secret = self.__secret_create(username, password, "device")
-        else:
-            self.__device_secret = None
-        if not (timeout is None):
-            self.__timeout=timeout
-        self.__connected = True
+        self.__timeout=timeout
+        self.__connected = True # Set as already connected to use the request_api to ping the instance. Will set correct after that if the connection works.
         response = self.request_api("/device/ping", "GET", [])['data']
         self.__connected = response
         self.update_request_id()
-        self.__session_token = None
-        self.__regain_token = None
         return response
 
     def reconnect(self):
@@ -1280,8 +1280,9 @@ class Myjdapi:
         :returns: boolean -- True if successful, False if there was any error.
 
         """
-        if self.__connected and (not self.__session_token or not self.__regain_token):
+        if self.__connection_type == "remoteapi":
             return True
+
         response = self.request_api("/my/reconnect", "GET",
                                     [("sessiontoken", self.__session_token),
                                      ("regaintoken", self.__regain_token)])
@@ -1298,7 +1299,7 @@ class Myjdapi:
         :returns: boolean -- True if successful, False if there was any error.
 
         """
-        if self.__connected and not self.__session_token:
+        if self.__connection_type == "remoteapi":
             response=True
         else:
             response = self.request_api("/my/disconnect", "GET",
@@ -1320,7 +1321,7 @@ class Myjdapi:
 
         :returns: boolean -- True if successful, False if there was any error.
         """
-        if self.__connected and not self.__session_token:
+        if self.__connection_type == "remoteapi":
             return
         response = self.request_api("/my/listdevices", "GET",
                                     [("sessiontoken", self.__session_token)])
@@ -1358,21 +1359,10 @@ class Myjdapi:
             for device in self.__devices:
                 if device["name"] == device_name:
                     return Jddevice(self, device)
+        elif len(self.__devices) > 0:
+            return Jddevice(self, self.__devices[0])
         raise (MYJDDeviceNotFoundException("Device not found\n"))
 
-    def get_direct_Connection_infos(self,action_url):
-        if self.__connected and not self.__session_token:
-            return [self.__device_connection]
-        else:
-            response = self.request_api("/device/getDirectConnectionInfos",
-                                         "POST", None, action_url)
-            if response is not None \
-                and 'data' in response \
-                and 'infos' in response["data"] \
-                and len(response["data"]["infos"]) != 0:
-                return response["data"]["infos"]
-            else:
-                return None
 
     def request_api(self,
                     path,
@@ -1403,8 +1393,8 @@ class Myjdapi:
                     else:
                         query += ["&%s=%s" % (param[0], param[1])]
             query += ["rid=" + str(self.__request_id)]
-            if not (self.__connected and not self.__session_token):
-                if self.__server_encryption_token is None:
+            if self.__connection_type == "myjd":
+                if self.__server_encryption_token is None: # Requests pre-auth.
                     query += [
                         "signature=" \
                         + str(self.__signature_create(self.__login_secret,
@@ -1419,19 +1409,10 @@ class Myjdapi:
             query = query[0] + "&".join(query[1:])
             encrypted_response = requests.get(api + query, timeout=self.__timeout)
         else:
-            params_request = []
-            if params is not None:
-                for param in params:
-                    if (isinstance(param, dict) and not self.__dict_as_str) or isinstance(param, str) or isinstance(param, list):
-                        params_request += [param]
-                    elif (isinstance(param, dict) and self.__dict_as_str) or isinstance(param, bool):
-                        params_request += [json.dumps(param)]
-                    else:
-                        params_request += [str(param)]
             params_request = {
                 "apiVer": self.__api_version,
                 "url": path,
-                "params": params_request,
+                "params": self.__adapt_params_for_request(params),
                 "rid": self.__request_id
             }
             data = json.dumps(params_request)
@@ -1488,3 +1469,26 @@ class Myjdapi:
                 return None
         self.update_request_id()
         return jsondata
+    
+    def get_connection_type(self):
+        return self.__connection_type
+
+    def __adapt_params_for_request(self, params):
+        if params is None:
+            return None
+        params_request = []
+        for param in params:
+            if isinstance(param, str):
+                params_request += [param]
+            elif isinstance(param, list):
+                params_request += [self.__adapt_params_for_request(param)]
+            elif isinstance(param, dict) and self.__connection_type == "remoteapi":
+                params_request += [param]
+            elif isinstance(param, dict):
+                params_request += [json.dumps(param)]
+            elif isinstance(param, bool) or isinstance(param, object):
+                params_request += [json.dumps(param)]
+            else:
+                params_request += [str(param)]
+        return params_request
+        
