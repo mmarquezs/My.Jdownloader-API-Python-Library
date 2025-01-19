@@ -12,7 +12,7 @@ with open(path.join(here, "README.rst"), encoding="utf-8") as f:
     long_description = f.read()
 setup(
     name="myjdapi",
-    version="1.1.7",
+    version="1.1.8",
     description="Library to use My.Jdownloader API in an easy way.",
     long_description=long_description,
     url="https://github.com/mmarquezs/My.Jdownloader-API-Python-Library/",
@@ -32,5 +32,8 @@ setup(
     ],
     keywords="myjdapi jdownloader my.jdownloader api development",
     packages=find_packages(exclude=["contrib", "docs", "tests"]),
-    install_requires=["requests", "pycryptodome"],
+    install_requires=[
+        "requests",
+        "pycryptodome"
+    ],
 )
