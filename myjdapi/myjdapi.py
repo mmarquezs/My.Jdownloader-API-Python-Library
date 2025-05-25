@@ -39,6 +39,186 @@ def UNPAD(s):
         return s[0:-ord(s[-1])]
 
 
+class Accounts:
+    """
+    Class that represents the accounts of a Device
+    """
+
+    def __init__(self, device):
+        self.device = device
+        self.url = "/accountsV2"
+
+    def add_account(self, premium_hoster, username, password):
+        """
+        add an account.
+
+        :param account:  Account
+        :return:
+        """
+        params = [premium_hoster, username, password]
+        return self.device.action(self.url + "/addAccount", params)
+
+    def add_basic_auth(self, type, hostmask, username, password):
+        """
+        add a basic auth account.
+
+        :param type:  Type of the account (either "FTP" or "HTTP")
+        :param hostmask:  Hostmask of the account (string)
+        :param username:  Username of the account (string)
+        :param password:  Password of the account (string)
+        :return: account ID (int)
+        """
+        params = [type, hostmask, username, password]
+        return self.device.action(self.url + "/addBasicAuth", params)
+
+    def disable_accounts(self, account_ids):
+        """
+        disable accounts with the corresponding account uuids.
+
+        :param account_ids:  Account ID (list of int)
+        :return:
+        """
+        params = [account_ids]
+        return self.device.action(self.url + "/disableAccounts", params)
+
+    def enable_accounts(self, account_ids):
+        """
+        enable an account with the corresponding account uuids.
+
+        :param account_ids:  Account ID (list of int)
+        :return:
+        """
+        params = [account_ids]
+        return self.device.action(self.url + "/enableAccounts", params)
+
+    def get_premium_hoster_url(self, hoster):
+        """
+        get the premium hoster url of an account.
+
+        :param account_id:  Account ID (int)
+        :return:  Premium hoster URL (string)
+        """
+        params = [hoster]
+        return self.device.action(self.url + "/getPremiumHosterUrl", params)
+
+    def list_accounts(
+        self,
+        query=[
+            {
+                "startAt": 0,
+                "maxResults": -1,
+                "userName": True,
+                "validUntil": True,
+                "trafficLeft": True,
+                "trafficMax": True,
+                "enabled": True,
+                "valid": True,
+                "error": False,
+                "UUIDList": [],
+            }
+        ],
+    ):
+        """
+        list all accounts.
+
+        an account is a dictionary with the following schema:
+        {
+            "hostname": (String),
+            "infoMap": (dictionary),
+            "uuid": (int),
+        }
+        The infoMap is a dictionary with the following schema:
+
+        :return:  List<Account>
+        """
+        return self.device.action(self.url + "/listAccounts", params=query)
+
+    def list_basic_auth(self):
+        """
+        list all basic auth accounts.
+
+        :return:  List<BasicAuth>
+        """
+        return self.device.action(self.url + "/listBasicAuth")
+
+    def list_premium_hoster(self):
+        """
+        list all premium hosters.
+
+        :return:  List<PremiumHoster>
+        """
+        return self.device.action(self.url + "/listPremiumHoster")
+
+    def list_premium_hoster_urls(self):
+        """
+        list all premium hoster urls.
+
+        :return:  dict (hoster: url)
+        """
+        return self.device.action(self.url + "/listPremiumHosterUrls")
+
+    def refresh_accounts(self, account_ids):
+        """
+        refresh accounts with the corresponding account uuids.
+
+        :param account_ids:  Account ID (list of int)
+        :return:
+        """
+        params = [account_ids]
+        return self.device.action(self.url + "/refreshAccounts", params)
+
+    def remove_accounts(self, account_ids):
+        """
+        remove accounts with the corresponding account uuids.
+
+        :param account_ids:  Account ID (list of int)
+        :return:
+        """
+        params = [account_ids]
+        return self.device.action(self.url + "/removeAccounts", params)
+
+    def remove_basic_auths(self, account_ids):
+        """
+        remove basic auth accounts with the corresponding account uuids.
+
+        :param account_ids:  Account ID (list of int)
+        :return:
+        """
+        params = [account_ids]
+        return self.device.action(self.url + "/removeBasicAuths", params)
+
+    def set_user_name_and_password(self, account_id, username, password):
+        """
+        set the username and password of an account.
+
+        :param account_id:  Account ID (int)
+        :param username:  Username (string)
+        :param password:  Password (string)
+        :return:
+        """
+        params = [account_id, username, password]
+        return self.device.action(self.url + "/setUserNameAndPassword", params)
+
+    def update_basic_auth(self, basic_auth):
+        """
+        update a basic auth account.
+
+        :param basic_auth:  dictionary with the following schema:
+        {
+            "created": (int),
+            "enabled": (boolean),
+            "hostmask": (string),
+            "id": (int),
+            "lastValidated": (int),
+            "password": (string),
+            "type": (string),
+            "username": (string)
+        }
+        :return: boolean
+        """
+        return self.device.action(self.url + "/updateBasicAuth", params=basic_auth)
+
+
 class System:
     """
     Class that represents the system-functionality of a Device
@@ -942,6 +1122,24 @@ class Captcha:
         return resp
 
 
+class Reconnect:
+    """
+    Class that can triger a reconnect of the internet connection in order to get a new IP address.
+    """
+
+    def __init__(self, device):
+        self.device = device
+        self.url = "/reconnect"
+
+    def do_reconnect(self):
+        """
+        This function triggers a reconnect of the internet connection in order to get a new IP address.
+        :return:  Response from the device
+        """
+        resp = self.device.action(self.url + "/doReconnect")
+        return resp
+
+
 class Jddevice:
     """
     Class that represents a JDownloader device and it's functions
@@ -957,6 +1155,7 @@ class Jddevice:
         self.device_id = device_dict["id"]
         self.device_type = device_dict["type"]
         self.myjd = jd
+        self.accounts = Accounts(self)
         self.config = Config(self)
         self.linkgrabber = Linkgrabber(self)
         self.captcha = Captcha(self)
@@ -965,6 +1164,7 @@ class Jddevice:
         self.downloadcontroller = DownloadController(self)
         self.extensions = Extension(self)
         self.dialogs = Dialog(self)
+        self.reconnect = Reconnect(self)
         self.update = Update(self)
         self.system = System(self)
         self.__direct_connection_info = None
@@ -1022,7 +1222,7 @@ class Jddevice:
         /example?param1=ex&param2=ex2 [("param1","ex"),("param2","ex2")]
         :param postparams: List of Params that are send in the post.
         """
-        
+
         if self.myjd.get_connection_type() == "remoteapi":
             action_url = None
         else:
@@ -1491,4 +1691,3 @@ class Myjdapi:
             else:
                 params_request += [str(param)]
         return params_request
-        
