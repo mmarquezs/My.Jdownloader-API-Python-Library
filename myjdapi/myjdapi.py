@@ -1163,6 +1163,7 @@ class Jddevice:
         self.toolbar = Toolbar(self)
         self.downloadcontroller = DownloadController(self)
         self.extensions = Extension(self)
+        self.jd = Jd(self)
         self.dialogs = Dialog(self)
         self.reconnect = Reconnect(self)
         self.update = Update(self)
