@@ -258,7 +258,7 @@ class System:
         :param force:  Force Shutdown of OS
         :return:
         """
-        params = force
+        params = [force]
         resp = self.device.action(self.url + "/shutdownOS", params)
         return resp
 
