@@ -48,6 +48,13 @@ class JddeviceTest(unittest.TestCase):
             with self.subTest(attribute=attribute):
                 self.assertIsInstance(getattr(self.device, attribute), cls)
 
+    def test_shutdown_os_passes_force_as_a_parameter(self):
+        for force in (True, False):
+            with self.subTest(force=force):
+                with mock.patch.object(self.device, "action", return_value=True) as action:
+                    self.assertTrue(self.device.system.shutdown_os(force))
+                action.assert_called_once_with("/system/shutdownOS", [force])
+
     def test_get_core_revision(self):
         with mock.patch.object(self.device, "action", return_value=50639) as action:
             self.assertEqual(self.device.jd.get_core_revision(), 50639)
